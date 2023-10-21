@@ -3,7 +3,7 @@ struct Casino {
     #[key]
     entity_id: u128,
     current_round_id: u128,
-    exists: bool,
+    total_rounds_played: u128,
 
     // minimum resource deposit
     min_deposit_resource_cost_id: u128,
@@ -20,6 +20,7 @@ struct CasinoRound {
     casino_id: u128,
     #[key]
     round_id: u128,
+    round_index: u128,
     winner_id: u128,
     participant_count: u128
 }

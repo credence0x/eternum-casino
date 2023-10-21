@@ -1,24 +1,22 @@
 #[dojo::contract]
-mod casino_systems {
+mod casino_play_systems {
+    use casino::models::ResourceAllowance;
+    use casino::models::{Casino, CasinoRound, CasinoRoundParticipant};
+
+    use casino::interface::ICasinoPlaySystems;
+    use casino::utils::random::{random, make_seed_from_transaction_hash};
+
     use eternum::alias::ID;
     use eternum::models::owner::Owner;
     use eternum::models::position::{Position};
     use eternum::models::resources::{Resource, ResourceCost};
     // use eternum::models::resources::{Resource,ResourceCost, ResourceAllowance};
 
-    use casino::models::ResourceAllowance;
-    use casino::models::{Casino, CasinoRound, CasinoRoundParticipant};
-
-    use casino::systems::casino::interface::ICasinoSystems;
-
-    use casino::utils::random::{random, make_seed_from_transaction_hash};
-
     use starknet::ContractAddress;
-
     use core::integer::BoundedInt;
 
     #[external(v0)]
-    impl CasinoSystemsImpl of ICasinoSystems<ContractState>{
+    impl CasinoPlaySystemsImpl of ICasinoPlaySystems<ContractState>{
 
 
         fn gamble(
@@ -27,7 +25,7 @@ mod casino_systems {
         ) {
 
             let casino = get!(world, casino_id, Casino);
-            assert(casino.exists != false, 'does not exist');
+            assert(casino.current_round_id != 0 , 'does not exist');
 
             let entity_owner = get!(world, entity_id, Owner);
             assert(
@@ -51,6 +49,10 @@ mod casino_systems {
                 = get!(world, (casino_id, casino.current_round_id), CasinoRound);
             assert(casino_round.winner_id == 0, 'round has ended');
 
+            // ensure that the entity's caravan is 
+            // carrying enough resources to enter
+            // then offload caravan
+
             let mut index = 0;
             loop {
                 if index == casino.min_deposit_resource_count {
@@ -67,8 +69,6 @@ mod casino_systems {
                     'insufficient resource'
                 );
 
-                // NOTE:: Round Id must me uuid
-
                 let mut casino_round_resource 
                 = get!(world, (casino_round.round_id, min_deposit_resource_cost.resource_type), Resource);
 
@@ -81,18 +81,12 @@ mod casino_systems {
             };
 
 
-            // Enter the entity into the current betting round
-
+            // enter the gambling round
 
             casino_round.participant_count += 1;
 
+            set!(world, (casino_round));
             set!(world, (
-                CasinoRound {
-                    casino_id: casino_round.casino_id,
-                    round_id: casino_round.round_id,
-                    winner_id: casino_round.winner_id,
-                    participant_count: casino_round.participant_count
-                },
                 CasinoRoundParticipant {
                     casino_id: casino_round.casino_id,
                     round_id: casino_round.round_id,
@@ -107,13 +101,13 @@ mod casino_systems {
         fn get_winner(self: @ContractState, world: IWorldDispatcher, casino_id: ID) -> ID {
 
             let mut casino = get!(world, casino_id, Casino);
-            assert(casino.exists != false , 'does not exist');
+            assert(casino.current_round_id != 0 , 'does not exist');
 
             // check if the current round can end
 
             let round_id = casino.current_round_id;
 
-            let casino_round = get!(world, (casino_id, round_id), CasinoRound);
+            let mut casino_round = get!(world, (casino_id, round_id), CasinoRound);
             assert(casino_round.participant_count != 0 , 'no round participant');
             assert(casino_round.winner_id == 0 , 'round has ended');
             let mut index = 0;
@@ -135,7 +129,7 @@ mod casino_systems {
                 index += 1;
             };
 
-            // find winner randomly
+            // find winner randomly and set winner
 
             let seed = make_seed_from_transaction_hash(casino_round.participant_count);
             let winner_index = random(seed, casino_round.participant_count);
@@ -143,16 +137,12 @@ mod casino_systems {
             let winning_participant 
                 = get!(world, (casino_id, round_id, winner_index), CasinoRoundParticipant);
 
-            set!(world, (
-                CasinoRound {
-                    casino_id: casino_round.casino_id,
-                    round_id: casino_round.round_id,
-                    winner_id: winning_participant.participant_id,
-                    participant_count: casino_round.participant_count
-                }
-            ));
+            casino_round.winner_id = winning_participant.participant_id;
+            set!(world, (casino_round));
+
 
             // approve winner to spend all resources
+            
             let mut index = 0;
             loop {
                 if index == casino.min_deposit_resource_count {
@@ -173,9 +163,21 @@ mod casino_systems {
                 index += 1;
             };
 
-            // update casino round
-            casino.current_round_id += 1;
+            // update casino
+            casino.current_round_id = world.uuid().into();
+            casino.total_rounds_played += 1;
             set!(world, (casino));
+
+            // create next round
+            set!(world, (
+                CasinoRound {
+                    casino_id: casino.entity_id,
+                    round_id: casino.current_round_id,
+                    round_index: casino.total_rounds_played,
+                    winner_id: 0,
+                    participant_count: 0
+                }
+            ));
             
             winning_participant.participant_id
 
