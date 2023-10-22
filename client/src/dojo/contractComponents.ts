@@ -575,5 +575,55 @@ export function defineContractComponents(world: World) {
         },
       );
     })(),
+    Casino: (() => {
+      const name = "Casino";
+      return defineComponent(
+        world,
+        {
+          current_round_id: RecsType.Number,
+          total_rounds_played: RecsType.Number,
+          min_deposit_resource_cost_id: RecsType.Number,
+          min_deposit_resource_count: RecsType.Number,
+          min_closing_resource_cost_id: RecsType.Number,
+          min_closing_resource_count: RecsType.Number,
+        },
+        {
+          metadata: {
+            name: name,
+          },
+        },
+      );
+    })(),
+    CasinoRound: (() => {
+      const name = "CasinoRound";
+      return defineComponent(
+        world,
+        {
+          round_index: RecsType.Number,
+          winner_id: RecsType.Number,
+          participant_count: RecsType.Number,
+        },
+        {
+          metadata: {
+            name: name,
+          },
+        },
+      );
+    })(),
+    CasinoRoundParticipant: (() => {
+      const name = "CasinoRoundParticipant";
+      return defineComponent(
+        world,
+        {
+          participant_index: RecsType.Number,
+          participant_id: RecsType.Number,
+        },
+        {
+          metadata: {
+            name: name,
+          },
+        },
+      );
+    })(),
   };
 }

@@ -6,6 +6,7 @@ import { useLocation } from "wouter";
 import { Tabs } from "../../elements/tab";
 import RealmsListPanel from "./RealmsListPanel";
 import { HyperstructuresPanel } from "./hyperstructures/HyperstructuresPanel";
+import { CasinosPanel } from "./casinos/CasinosPanel";
 import useUIStore from "../../hooks/store/useUIStore";
 
 const WorldMapMenuComponent = () => {
@@ -64,6 +65,29 @@ const WorldMapMenuComponent = () => {
         ),
         component: <HyperstructuresPanel />,
       },
+      {
+      key: "casinos",
+      label: (
+        <div
+          onMouseEnter={() =>
+            setTooltip({
+              position: "bottom",
+              content: (
+                <>
+                  <p className="whitespace-nowrap">Lets see how lucky you are</p>
+                  <p className="whitespace-nowrap">Casinos.</p>
+                </>
+              ),
+            })
+          }
+          onMouseLeave={() => setTooltip(null)}
+          className="flex relative group flex-col items-center"
+        >
+          <Relic className="mb-2 fill-gold" /> <div>Casinos</div>
+        </div>
+      ),
+      component: <CasinosPanel />,
+    },
     ],
     [selectedTab],
   );
