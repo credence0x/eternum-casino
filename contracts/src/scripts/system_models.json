@@ -1,0 +1,16 @@
+{ 
+    "CASINO_CONFIG_SYSTEMS": [
+        "Casino",
+        "CasinoRound",
+        "Position",
+        "ResourceCost"
+    ],
+    "CASINO_PLAY_SYSTEMS": [
+        "Casino",
+        "CasinoRound",
+        "CasinoRoundPartipant",
+        "CasinoRoundPartipant",
+        "Resource",
+        "ResourceCost"
+    ]
+}
