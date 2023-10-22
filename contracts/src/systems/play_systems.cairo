@@ -1,6 +1,5 @@
 #[dojo::contract]
 mod casino_play_systems {
-    use casino::models::ResourceAllowance;
     use casino::models::{Casino, CasinoRound, CasinoRoundParticipant};
 
     use casino::interface::ICasinoPlaySystems;
@@ -10,7 +9,11 @@ mod casino_play_systems {
     use eternum::models::owner::Owner;
     use eternum::models::position::{Position};
     use eternum::models::resources::{Resource, ResourceCost};
-    // use eternum::models::resources::{Resource,ResourceCost, ResourceAllowance};
+
+    use eternum::systems::resources::interface::{
+        IResourceSystemsDispatcher,
+        IResourceSystemsDispatcherTrait,
+    };
 
     use starknet::ContractAddress;
     use core::integer::BoundedInt;
@@ -98,7 +101,10 @@ mod casino_play_systems {
 
 
 
-        fn get_winner(self: @ContractState, world: IWorldDispatcher, casino_id: ID) -> ID {
+        fn get_winner(
+            self: @ContractState, world: IWorldDispatcher, 
+            resource_systems_address: ContractAddress, casino_id: ID
+        ) -> ID {
 
             let mut casino = get!(world, casino_id, Casino);
             assert(casino.current_round_id != 0 , 'does not exist');
@@ -142,26 +148,34 @@ mod casino_play_systems {
 
 
             // approve winner to spend all resources
+            let resource_systems = IResourceSystemsDispatcher {
+                contract_address: resource_systems_address
+            };
             
             let mut index = 0;
+            let mut resources_won: Array<(u8, u128)> = array![];
             loop {
                 if index == casino.min_deposit_resource_count {
                     break;
                 }
 
-                let min_deposit_resource_cost 
-                    = get!(world, (casino.min_deposit_resource_cost_id, index), ResourceCost);
-
-                set!(world, (
-                    ResourceAllowance {
-                        owner_entity_id: casino_round.round_id,
-                        approved_entity_id: winning_participant.participant_id,
-                        resource_type: min_deposit_resource_cost.resource_type,
-                        amount: BoundedInt::max()
-                    }
+                let min_closing_resource_cost 
+                    = get!(world, (casino.min_closing_resource_cost_id, index), ResourceCost);
+                let casino_round_resource 
+                    = get!(world, (casino_round.round_id, min_closing_resource_cost.resource_type), Resource);
+                
+                resources_won.append((
+                    casino_round_resource.resource_type, casino_round_resource.balance
                 ));
+                
                 index += 1;
             };
+            resource_systems.approve(
+                world,
+                casino_round.round_id,
+                winning_participant.participant_id,
+                resources_won.span()
+            );
 
             // update casino
             casino.current_round_id = world.uuid().into();

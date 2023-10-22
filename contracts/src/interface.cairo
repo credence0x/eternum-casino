@@ -2,11 +2,12 @@ use eternum::alias::ID;
 use eternum::models::position::Coord;
 
 use dojo::world::IWorldDispatcher;
+use starknet::ContractAddress;
 
 #[starknet::interface]
 trait ICasinoPlaySystems<TContractState> {
     fn gamble(self: @TContractState, world: IWorldDispatcher, entity_id: ID, caravan_id: ID, casino_id: ID);
-    fn get_winner(self: @TContractState, world: IWorldDispatcher, casino_id: ID) -> ID;
+    fn get_winner(self: @TContractState, world: IWorldDispatcher, resource_systems_address: ContractAddress, casino_id: ID) -> ID;
 }
 
 #[starknet::interface]
