@@ -1,5 +1,5 @@
 #[derive(Model, Copy, Drop, Serde)]
-struct Casino {
+struct CasinoMetaData {
     #[key]
     entity_id: u128,
     current_round_id: u128,

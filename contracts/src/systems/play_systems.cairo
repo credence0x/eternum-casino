@@ -1,6 +1,6 @@
 #[dojo::contract]
 mod casino_play_systems {
-    use casino::models::{Casino, CasinoRound, CasinoRoundParticipant};
+    use casino::models::{CasinoMetaData, CasinoRound, CasinoRoundParticipant};
 
     use casino::interface::ICasinoPlaySystems;
     use casino::utils::random::{random, make_seed_from_transaction_hash};
@@ -27,7 +27,7 @@ mod casino_play_systems {
             entity_id: ID, caravan_id: ID, casino_id: ID
         ) {
 
-            let casino = get!(world, casino_id, Casino);
+            let casino = get!(world, casino_id, CasinoMetaData);
             assert(casino.current_round_id != 0 , 'does not exist');
 
             let entity_owner = get!(world, entity_id, Owner);
@@ -106,7 +106,7 @@ mod casino_play_systems {
             resource_systems_address: ContractAddress, casino_id: ID
         ) -> ID {
 
-            let mut casino = get!(world, casino_id, Casino);
+            let mut casino = get!(world, casino_id, CasinoMetaData);
             assert(casino.current_round_id != 0 , 'does not exist');
 
             // check if the current round can end

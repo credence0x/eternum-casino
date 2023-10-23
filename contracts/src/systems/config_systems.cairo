@@ -1,6 +1,6 @@
 #[dojo::contract]
 mod casino_config_systems {
-    use casino::models::{Casino, CasinoRound};
+    use casino::models::{CasinoMetaData, CasinoRound};
     use casino::interface::ICasinoConfigSystems;
     
     use eternum::alias::ID;
@@ -81,7 +81,7 @@ mod casino_config_systems {
             let casino_id: u128 = world.uuid().into();
             let round_id: u128 = world.uuid().into();
             set!(world, (
-                Casino {
+                CasinoMetaData {
                     entity_id: casino_id,
                     current_round_id: round_id,
                     total_rounds_played: 0,
