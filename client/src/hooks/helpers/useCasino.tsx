@@ -7,6 +7,7 @@ import { getContractPositionFromRealPosition, getEntityIdFromKeys } from "../../
 export interface CasinoInterface {
   casinoId: number;
   orderId: number;
+  currentRoundId: number;
   progress: number;
   casinoCurrentRoundResources: {
     resourceId: number;
@@ -67,6 +68,7 @@ export const useCasino = () => {
         return {
           casinoId,
           orderId,
+          currentRoundId: casino.current_round_id,
           progress,
           casinoCurrentRoundResources,
           minimumDepositResources: casinoData[orderId - 1].resources.minimum_deposit.map((resource) => {
@@ -86,3 +88,20 @@ export const useCasino = () => {
     getCasino,
   };
 };
+
+
+export const getCasinoRoundWinner = (casinoId, roundId) => {
+  const {
+    setup: {
+      components: { CasinoRound },
+    },
+  } = useDojo();
+
+  let casinoRound = getComponentValue(
+    CasinoRound, 
+    getEntityIdFromKeys([BigInt(casinoId), BigInt(roundId)])
+  );
+
+  return casinoRound.winner_id;
+
+}

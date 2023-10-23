@@ -16,7 +16,7 @@ import { getComponentValue } from "@latticexyz/recs";
 import { useDojo } from "../../../../DojoContext";
 import Button from "../../../../elements/Button";
 import { Resource } from "../../../../types";
-import { CasinoInterface, useCasino } from "../../../../hooks/helpers/useCasino";
+import { CasinoInterface, getCasinoRoundWinner, useCasino } from "../../../../hooks/helpers/useCasino";
 import useUIStore from "../../../../hooks/store/useUIStore";
 
 type CaravanProps = {
@@ -35,7 +35,6 @@ export const CasinoCaravan = ({ caravan, casinoData, ...props }: CaravanProps) =
 
   const [isLoading, setIsLoading] = useState(false);
   const hasArrived = arrivalTime !== undefined && nextBlockTimestamp !== undefined && arrivalTime <= nextBlockTimestamp;
-  // const hasArrived = true; 
 
   const {
     account: { account },

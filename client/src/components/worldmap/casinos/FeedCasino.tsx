@@ -18,7 +18,7 @@ import { OrderIcon } from "../../../elements/OrderIcon";
 import { orderNameDict, orders } from "@bibliothecadao/eternum";
 import { ResourceCost } from "../../../elements/ResourceCost";
 import clsx from "clsx";
-import { CasinoInterface, useCasino } from "../../../hooks/helpers/useCasino";
+import { CasinoInterface, getCasinoRoundWinner, useCasino } from "../../../hooks/helpers/useCasino";
 import { Tabs } from "../../../elements/tab";
 import ProgressBar from "../../../elements/ProgressBar";
 import { CasinoCaravansPanel } from "./CasinoCaravans/CasinoCaravansPanel";
@@ -237,7 +237,7 @@ const SendResourcesToCasinoPanel = ({
     },
   } = useDojo();
 
-  const getCasinoRoundWinner = async () => {
+  const closeCasinoRoundAndPickWinner = async () => {
     setIsLoading(true);
     await casino_get_winner({ 
       signer: account, 
@@ -459,7 +459,18 @@ const SendResourcesToCasinoPanel = ({
               if (step == 3) {
                 sendResourcesToCasino();
               } else {
-                isComplete ? getCasinoRoundWinner() : setStep(step + 1);
+                if (isComplete){
+                  closeCasinoRoundAndPickWinner()
+
+                  let winnerEntityId = getCasinoRoundWinner(
+                    casinoData?.casinoId || 0,
+                    casinoData.currentRoundId
+                  )
+                  alert(`Winner is ${winnerEntityId}`)
+
+                } else {
+                  setStep(step + 1);
+                }
               }
             }}
             variant={canGoToNextStep ? "success" : "outline"}
