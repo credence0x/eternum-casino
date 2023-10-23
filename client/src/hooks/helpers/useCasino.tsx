@@ -34,6 +34,11 @@ export const useCasino = () => {
 
     if (casinId.size > 0) {
       let casinoId = Array.from(casinId)[0];
+      if (orderId == 1) {
+        // other things exists on the same position for some reason
+        casinoId = Array.from(casinId)[Array.from(casinId).length -1];
+      }
+
       let casino = getComponentValue(CasinoMetaData, casinoId);
 
       if (casino) {
