@@ -9,6 +9,7 @@ import {
   divideByPrecision,
   getContractPositionFromRealPosition,
   getEntityIdFromKeys,
+  
 } from "../../../utils/utils";
 import { useDojo } from "../../../DojoContext";
 import { Steps } from "../../../elements/Steps";
@@ -61,7 +62,7 @@ export const FeedCasinoPopup = ({ onClose, order }: FeedCasinoPopupProps) => {
                 position: "bottom",
                 content: (
                   <>
-                    <p className="whitespace-nowrap">Gamble with your resources.</p>
+                    <p className="whitespace-nowrap">Take a risk and succeed.</p>
                   </>
                 ),
               })
@@ -69,11 +70,11 @@ export const FeedCasinoPopup = ({ onClose, order }: FeedCasinoPopupProps) => {
             onMouseLeave={() => setTooltip(null)}
             className="flex relative group flex-col items-center"
           >
-            <div>Gamble</div>
+            <div>Travel to Casino</div>
           </div>
         ),
         component: (
-          <GambleAtCasinoPanel
+          <SendResourcesToCasinoPanel
             order={order}
             onSendCaravan={() => setSelectedTab(1)}
             onClose={onClose}
@@ -100,7 +101,7 @@ export const FeedCasinoPopup = ({ onClose, order }: FeedCasinoPopupProps) => {
             onMouseLeave={() => setTooltip(null)}
             className="flex group relative flex-col items-center"
           >
-            <div>{`Caravans (${caravans.length})`}</div>
+            <div>{`Caravans at Casino (${caravans.length})`}</div>
           </div>
         ),
         component: casinoData ? (
@@ -192,7 +193,7 @@ const SelectableRealm = ({ realm, selected = false, onClick, costs, ...props }: 
                   withTooltip
                   key={resource.id}
                   resourceId={resource.id}
-                  amount={resource.balance}
+                  amount={resource?.balance}
                   color={resource.balance >= costById[resource.id] ? "" : "text-order-giants"}
                 />
               );
@@ -204,14 +205,14 @@ const SelectableRealm = ({ realm, selected = false, onClick, costs, ...props }: 
           className="h-6 text-xxs ml-auto"
           variant="success"
         >
-          Send to Casino
+          Select Realm
         </Button>
       </div>
     </div>
   );
 };
 
-const GambleAtCasinoPanel = ({
+const SendResourcesToCasinoPanel = ({
   order,
   onClose,
   onSendCaravan,
@@ -358,7 +359,7 @@ const GambleAtCasinoPanel = ({
             <span className="text-gray-gold italic">State</span>
             <span
               className={clsx("text-gold")}
-            > GAMBLE YOUR LIFE AWAY
+            > GAMBLE YOUR LIFE AWAY 
             </span>
           </div>
         </div>
@@ -368,10 +369,10 @@ const GambleAtCasinoPanel = ({
         <>
           <div className="flex flex-col space-y-2 text-xs">
             <div className="relative w-full">
-              <img src={`/images/buildings/casino.jpg`} className="object-cover w-full h-full rounded-[10px]" />
+              <img src={`/images/buildings/casino.webp`} className="object-cover w-full h-full rounded-[10px]" />
               <div className="flex flex-col p-2 absolute left-2 bottom-2 rounded-[10px] bg-black/60">
                 <div className="mb-1 ml-1 italic text-light-pink text-xxs">
-                  "Minimum Deposit:"
+                  "Minimum Deposit:" 
                 </div>
                 <div className="grid grid-cols-4 gap-1">
                   {casinoData?.minimumDepositResources.map(({ resourceId, amount }) => (
@@ -389,7 +390,7 @@ const GambleAtCasinoPanel = ({
               </div>
             </div>
             <Headline size="big">
-              Gamble- Step {step}
+              Send caravan to Casino- Step {step}
             </Headline>
             <div className="text-xxs mb-2 italic text-gold">
               To gamble at the Casino you need to send a caravan with minumum resources deposit to the Casino location.
@@ -463,8 +464,7 @@ const GambleAtCasinoPanel = ({
             }}
             variant={canGoToNextStep ? "success" : "outline"}
           >
-            {step == 3 ? "Send Caravan" : "Next Step"}
-            {/* {step == 3 ? "Send Caravan" : isComplete ? "Complete" : "Next Step"} */}
+            {step == 3 ? "Send Caravan" : isComplete ? "Get Round Winner" : "Next Step"}
           </Button>
         )}
         {isLoading && (

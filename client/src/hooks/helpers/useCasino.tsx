@@ -24,7 +24,7 @@ export interface CasinoInterface {
 export const useCasino = () => {
   const {
     setup: {
-      components: { Casino, Resource, Position },
+      components: { CasinoMetaData, Resource, Position },
     },
   } = useDojo();
 
@@ -34,7 +34,7 @@ export const useCasino = () => {
 
     if (casinId.size > 0) {
       let casinoId = Array.from(casinId)[0];
-      let casino = getComponentValue(Casino, casinoId);
+      let casino = getComponentValue(CasinoMetaData, casinoId);
 
       if (casino) {
         let casinoCurrentRoundResources: { resourceId: number; currentAmount: number; completeAmount: number }[] = [];

@@ -35,6 +35,7 @@ export const CasinoCaravan = ({ caravan, casinoData, ...props }: CaravanProps) =
 
   const [isLoading, setIsLoading] = useState(false);
   const hasArrived = arrivalTime !== undefined && nextBlockTimestamp !== undefined && arrivalTime <= nextBlockTimestamp;
+  // const hasArrived = true; 
 
   const {
     account: { account },
@@ -155,8 +156,7 @@ export const CasinoCaravan = ({ caravan, casinoData, ...props }: CaravanProps) =
             variant={hasArrived ? "success" : "danger"}
             className="ml-auto mt-auto p-2 !h-4 text-xxs !rounded-md"
           >
-            Add Stake And Return
-            {/* {hasArrived ? (isInitialized ? `Transfer And Return` : `Initialize And Return`) : "On the way"} */}
+            {hasArrived ? `Stake Your Chips`  : "On the way"}
           </Button>
         )}
         {isLoading && isMine && (

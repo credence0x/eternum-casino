@@ -575,8 +575,8 @@ export function defineContractComponents(world: World) {
         },
       );
     })(),
-    Casino: (() => {
-      const name = "Casino";
+    CasinoMetaData: (() => {
+      const name = "CasinoMetaData";
       return defineComponent(
         world,
         {
