@@ -10,6 +10,11 @@ sierra-replace-ids = true
 dojo = { git = "https://github.com/dojoengine/dojo", tag="v0.3.0-rc8" }
 eternum = { git = "https://github.com/BibliothecaDAO/eternum.git", rev="ed12307af86521ac49751972f445ae46ebfcf0b1" }
 
+[scripts]
+katana = "katana"
+deploy = "./scripts/deploy.sh"
+torii = "torii --world 0x62440ea5b77f1a4fad6e4a88383c750b9101a7bcc5d4de046dc0ae0628b6504"
+
 [tool.dojo.env]
 rpc_url = "https://api.cartridge.gg/x/eternum/katana"
 
