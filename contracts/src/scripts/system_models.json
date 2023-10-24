@@ -11,5 +11,9 @@
         "CasinoRoundParticipant",
         "Resource",
         "ResourceCost"
+    ],
+    "NEW_RESOURCE_SYSTEMS": [
+        "Resource",
+        "ResourceAllowance"
     ]
 }

@@ -1,4 +1,4 @@
-import { HasValue, getComponentValue, runQuery } from "@latticexyz/recs";
+import { Has, HasValue, getComponentValue, runQuery } from "@latticexyz/recs";
 import { useDojo } from "../../DojoContext";
 import { Position, UIPosition } from "../../types";
 import casinoData from "../../data/casinos.json";
@@ -25,22 +25,29 @@ export interface CasinoInterface {
 export const useCasino = () => {
   const {
     setup: {
-      components: { CasinoMetaData, Resource, Position },
+      components: { CasinoMetaData, Resource, Position, CasinoRound },
     },
   } = useDojo();
 
+  const getCasinoRoundWinner = (casinoId: number, roundId: number) => {
+    let casinoRound = getComponentValue(CasinoRound, getEntityIdFromKeys([BigInt(casinoId), BigInt(roundId)]));
+
+    return casinoRound.winner_id;
+  };
+
   const getCasino = (orderId: number, uiPosition: UIPosition): CasinoInterface | undefined => {
     const position = getContractPositionFromRealPosition({ x: uiPosition.x, y: uiPosition.z });
-    const casinId = runQuery([HasValue(Position, { x: position.x, y: position.y })]);
+    const casinId = runQuery([Has(CasinoMetaData), HasValue(Position, { x: position.x, y: position.y })]);
 
     if (casinId.size > 0) {
       let casinoId = Array.from(casinId)[0];
       if (orderId == 1) {
         // other things exists on the same position for some reason
-        casinoId = Array.from(casinId)[Array.from(casinId).length -1];
+        casinoId = Array.from(casinId)[Array.from(casinId).length - 1];
       }
 
       let casino = getComponentValue(CasinoMetaData, casinoId);
+      console.log({ casino });
 
       if (casino) {
         let casinoCurrentRoundResources: { resourceId: number; currentAmount: number; completeAmount: number }[] = [];
@@ -86,22 +93,18 @@ export const useCasino = () => {
 
   return {
     getCasino,
+    getCasinoRoundWinner,
   };
 };
 
+// export const getCasinoRoundWinner = (casinoId, roundId) => {
+//   const {
+//     setup: {
+//       components: { CasinoRound },
+//     },
+//   } = useDojo();
 
-export const getCasinoRoundWinner = (casinoId, roundId) => {
-  const {
-    setup: {
-      components: { CasinoRound },
-    },
-  } = useDojo();
+//   let casinoRound = getComponentValue(CasinoRound, getEntityIdFromKeys([BigInt(casinoId), BigInt(roundId)]));
 
-  let casinoRound = getComponentValue(
-    CasinoRound, 
-    getEntityIdFromKeys([BigInt(casinoId), BigInt(roundId)])
-  );
-
-  return casinoRound.winner_id;
-
-}
+//   return casinoRound.winner_id;
+// };

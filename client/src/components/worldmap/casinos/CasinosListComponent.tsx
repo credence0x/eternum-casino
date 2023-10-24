@@ -14,6 +14,7 @@ export const CasinosListComponent = ({}: CasinosListComponentProps) => {
   const [showFeedPopup, setShowFeedPopup] = useState(false);
   const moveCameraToTarget = useUIStore((state) => state.moveCameraToTarget);
   const casinos = useUIStore((state) => state.casinos);
+  console.log({ casinos });
 
   const {
     account: { account },
@@ -31,9 +32,7 @@ export const CasinosListComponent = ({}: CasinosListComponentProps) => {
       <FiltersPanel className="px-3 py-2">
         <FilterButton active={false}>Filter</FilterButton>
       </FiltersPanel>
-      {chosenOrder && showFeedPopup && (
-        <FeedCasinoPopup onClose={() => setShowFeedPopup(false)} order={chosenOrder} />
-      )}
+      {chosenOrder && showFeedPopup && <FeedCasinoPopup onClose={() => setShowFeedPopup(false)} order={chosenOrder} />}
       {chosenOrder && casinos && (
         <div className="space-y-2 px-2 mb-2">
           <div className="text-xs text-gold">Casino of your order: </div>
@@ -52,12 +51,7 @@ export const CasinosListComponent = ({}: CasinosListComponentProps) => {
         <div className="text-xs text-gold">Other Casinos: </div>
         {casinos.map((casino, i) =>
           chosenOrder && i + 1 !== chosenOrder ? (
-            <CasinosListItem
-              key={i}
-              casino={casino}
-              order={i + 1}
-              coords={casino?.uiPosition as any}
-            />
+            <CasinosListItem key={i} casino={casino} order={i + 1} coords={casino?.uiPosition as any} />
           ) : null,
         )}
       </div>

@@ -5,12 +5,7 @@ import { SelectCaravanPanel } from "../../cityview/realm/trade/CreateOffer";
 import useRealmStore from "../../../hooks/store/useRealmStore";
 import { getRealm } from "../../../utils/realms";
 import { getComponentValue } from "@latticexyz/recs";
-import {
-  divideByPrecision,
-  getContractPositionFromRealPosition,
-  getEntityIdFromKeys,
-  
-} from "../../../utils/utils";
+import { divideByPrecision, getContractPositionFromRealPosition, getEntityIdFromKeys } from "../../../utils/utils";
 import { useDojo } from "../../../DojoContext";
 import { Steps } from "../../../elements/Steps";
 import { Headline } from "../../../elements/Headline";
@@ -18,7 +13,7 @@ import { OrderIcon } from "../../../elements/OrderIcon";
 import { orderNameDict, orders } from "@bibliothecadao/eternum";
 import { ResourceCost } from "../../../elements/ResourceCost";
 import clsx from "clsx";
-import { CasinoInterface, getCasinoRoundWinner, useCasino } from "../../../hooks/helpers/useCasino";
+import { CasinoInterface, useCasino } from "../../../hooks/helpers/useCasino";
 import { Tabs } from "../../../elements/tab";
 import ProgressBar from "../../../elements/ProgressBar";
 import { CasinoCaravansPanel } from "./CasinoCaravans/CasinoCaravansPanel";
@@ -104,11 +99,7 @@ export const FeedCasinoPopup = ({ onClose, order }: FeedCasinoPopupProps) => {
             <div>{`Caravans at Casino (${caravans.length})`}</div>
           </div>
         ),
-        component: casinoData ? (
-          <CasinoCaravansPanel caravans={caravans} casinoData={casinoData} />
-        ) : (
-          <></>
-        ),
+        component: casinoData ? <CasinoCaravansPanel caravans={caravans} casinoData={casinoData} /> : <></>,
       },
     ],
     [selectedTab, caravans],
@@ -185,7 +176,7 @@ const SelectableRealm = ({ realm, selected = false, onClick, costs, ...props }: 
       <div className="text-gold ml-auto absolute right-2 top-2">24h:10m away</div>
       <div className="flex items-center mt-6 w-full">
         <div className="flex">
-          { realm.resources &&
+          {realm.resources &&
             realm.resources.map((resource: any) => {
               return (
                 <ResourceCost
@@ -199,12 +190,7 @@ const SelectableRealm = ({ realm, selected = false, onClick, costs, ...props }: 
               );
             })}
         </div>
-        <Button
-          disabled={!canInitialize}
-          onClick={onClick}
-          className="h-6 text-xxs ml-auto"
-          variant="success"
-        >
+        <Button disabled={!canInitialize} onClick={onClick} className="h-6 text-xxs ml-auto" variant="success">
           Select Realm
         </Button>
       </div>
@@ -230,6 +216,9 @@ const SendResourcesToCasinoPanel = ({
   const [step, setStep] = useState<number>(1);
   const [isLoading, setIsLoading] = useState(false);
 
+  const casinos = useUIStore((state) => state.casinos);
+  const setCasinos = useUIStore((state) => state.setCasinos);
+
   const {
     account: { account },
     setup: {
@@ -237,19 +226,32 @@ const SendResourcesToCasinoPanel = ({
     },
   } = useDojo();
 
+  const { getCasinoRoundWinner, getCasino } = useCasino();
+
+  const updateCasino = () => {
+    const newCasino = getCasino(casinoData.orderId, casinoData.uiPosition);
+    casinos[casinoData.orderId - 1] = newCasino;
+    setCasinos([...casinos]);
+  };
+
   const closeCasinoRoundAndPickWinner = async () => {
     setIsLoading(true);
-    await casino_get_winner({ 
-      signer: account, 
+    console.log({ casinoData });
+    await casino_get_winner({
+      signer: account,
       casino_id: casinoData?.casinoId || 0,
-    });    
+    });
+    updateCasino();
     onClose();
   };
 
   const sendResourcesToCasino = async () => {
     setIsLoading(true);
     if (casinoData) {
-      const resourcesList = casinoData?.minimumDepositResources.flatMap((resource) => [resource.resourceId, resource.amount]);
+      const resourcesList = casinoData?.minimumDepositResources.flatMap((resource) => [
+        resource.resourceId,
+        resource.amount,
+      ]);
       if (isNewCaravan) {
         await send_resources_to_destination({
           signer: account,
@@ -285,6 +287,7 @@ const SendResourcesToCasinoPanel = ({
   const setRealmEntityId = useRealmStore((state) => state.setRealmEntityId);
 
   const isComplete = casinoData && casinoData?.progress >= 100;
+  console.log({ isComplete });
 
   // TODO: use same precision everywhere
   const resourceWeight = useMemo(() => {
@@ -294,10 +297,9 @@ const SendResourcesToCasinoPanel = ({
     )) {
       _resourceWeight += amount * 1;
     }
-    
+
     return _resourceWeight;
   }, [casinoData]);
-
 
   const minDepositResourceIds = useMemo(() => {
     return casinoData?.minimumDepositResources.map((resource) => resource.resourceId) || [];
@@ -310,7 +312,6 @@ const SendResourcesToCasinoPanel = ({
     });
     return amounts;
   }, [casinoData]);
-
 
   const realms = useMemo(
     () =>
@@ -357,10 +358,7 @@ const SendResourcesToCasinoPanel = ({
           </div>
           <div className="flex flex-col text-xxs text-right">
             <span className="text-gray-gold italic">State</span>
-            <span
-              className={clsx("text-gold")}
-            > GAMBLE YOUR LIFE AWAY 
-            </span>
+            <span className={clsx("text-gold")}> GAMBLE YOUR LIFE AWAY</span>
           </div>
         </div>
         <ProgressBar rounded progress={casinoData?.progress || 0} className="bg-gold" />
@@ -371,27 +369,21 @@ const SendResourcesToCasinoPanel = ({
             <div className="relative w-full">
               <img src={`/images/buildings/casino.webp`} className="object-cover w-full h-full rounded-[10px]" />
               <div className="flex flex-col p-2 absolute left-2 bottom-2 rounded-[10px] bg-black/60">
-                <div className="mb-1 ml-1 italic text-light-pink text-xxs">
-                  "Minimum Deposit:" 
-                </div>
+                <div className="mb-1 ml-1 italic text-light-pink text-xxs">"Minimum Deposit:"</div>
                 <div className="grid grid-cols-4 gap-1">
                   {casinoData?.minimumDepositResources.map(({ resourceId, amount }) => (
-                        <ResourceCost
-                          withTooltip
-                          type="vertical"
-                          key={resourceId}
-                          resourceId={resourceId}
-                          amount={amount}
-                        />
-                      ))
-                    }
-                    
+                    <ResourceCost
+                      withTooltip
+                      type="vertical"
+                      key={resourceId}
+                      resourceId={resourceId}
+                      amount={amount}
+                    />
+                  ))}
                 </div>
               </div>
             </div>
-            <Headline size="big">
-              Send caravan to Casino- Step {step}
-            </Headline>
+            <Headline size="big">Send caravan to Casino- Step {step}</Headline>
             <div className="text-xxs mb-2 italic text-gold">
               To gamble at the Casino you need to send a caravan with minumum resources deposit to the Casino location.
             </div>
@@ -405,7 +397,6 @@ const SendResourcesToCasinoPanel = ({
           <Headline size="big">Select Realm - Step {step}</Headline>
           <div className="text-xxs mb-2 italic text-gold">
             Press "Set the amounts" on any Realm with required resources, to set amounts and send caravan to Casino.
-            
           </div>
           {realms.map((realm) => (
             <SelectableRealm
@@ -459,15 +450,11 @@ const SendResourcesToCasinoPanel = ({
               if (step == 3) {
                 sendResourcesToCasino();
               } else {
-                if (isComplete){
-                  closeCasinoRoundAndPickWinner()
+                if (isComplete) {
+                  closeCasinoRoundAndPickWinner();
 
-                  let winnerEntityId = getCasinoRoundWinner(
-                    casinoData?.casinoId || 0,
-                    casinoData.currentRoundId
-                  )
-                  alert(`Winner is ${winnerEntityId}`)
-
+                  let winnerEntityId = getCasinoRoundWinner(casinoData?.casinoId || 0, casinoData.currentRoundId);
+                  alert(`Winner is ${winnerEntityId}`);
                 } else {
                   setStep(step + 1);
                 }

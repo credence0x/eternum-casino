@@ -35,3 +35,15 @@ struct CasinoRoundParticipant {
     participant_index: u128,
     participant_id: u128
 }
+
+#[derive(Model, Copy, Drop, Serde)]
+struct ResourceAllowance {
+    #[key]
+    owner_entity_id: u128,
+    #[key]
+    approved_entity_id: u128,
+    #[key]
+    resource_type: u8,
+    amount: u128,
+}
+

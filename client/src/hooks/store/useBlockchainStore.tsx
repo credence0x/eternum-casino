@@ -56,6 +56,7 @@ const fetchBlockTimestamp = async (): Promise<number | undefined> => {
         }),
       });
       const data = await response.json();
+      console.log({ data, nodeUrl: import.meta.env.VITE_KATANA_URL! });
       return data.result;
     } else {
       // NOTE: if we are using Katana in dev, we should use next block timestmamp because

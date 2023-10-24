@@ -1,22 +1,24 @@
 #!/bin/bash
 
-CASINO_CONFIG_SYSTEMS="0x9c12ab539b0723468849316d60867171004675f0cf290578c3f7369bd24ded";
-CASINO_PLAY_SYSTEMS="0x720bce719803b498a77b774334ff1f175f67afaea2e4dbecc2d66182baf4a51";
+CASINO_CONFIG_SYSTEMS="0x62b8abc7f76bc754bffb033fab3b3f1dc3361f8e68763a2bf4e8e8bb185e043";
+CASINO_PLAY_SYSTEMS="0x257c6dafcc9d15c037887335d21232ca603cc2129e14d554ea103569bf71ef2";
+NEW_RESOURCE_SYSTEMS="0x5731b6138194f548207fd42d38d906951c30c57c0f546c7848c8e807ad30d68";
+
 
 commands=()
 # Read the System to Components JSON file
 system_models_json=$(cat ./scripts/system_models.json)
 
 # Loop through each system
-# for system in $(echo $system_models_json | jq -r 'keys[]'); do
-#     # Loop through each component that the system writes to
-#     for model in $(echo $system_models_json | jq -r ".$system[]"); do
-#         system_var="${system}"
-#         contract_address="${!system_var}"
-#         # make the system a writer of the component
-#         commands+=("sozo auth writer --world "$SOZO_WORLD" $model $contract_address")
-#     done
-# done
+for system in $(echo $system_models_json | jq -r 'keys[]'); do
+    # Loop through each component that the system writes to
+    for model in $(echo $system_models_json | jq -r ".$system[]"); do
+        system_var="${system}"
+        contract_address="${!system_var}"
+        # make the system a writer of the component
+        commands+=("sozo auth writer --world "$SOZO_WORLD" $model $contract_address")
+    done
+done
 
 commands+=(
     #     # Define casinos

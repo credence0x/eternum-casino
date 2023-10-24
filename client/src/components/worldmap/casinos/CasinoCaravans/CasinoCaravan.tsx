@@ -16,7 +16,7 @@ import { getComponentValue } from "@latticexyz/recs";
 import { useDojo } from "../../../../DojoContext";
 import Button from "../../../../elements/Button";
 import { Resource } from "../../../../types";
-import { CasinoInterface, getCasinoRoundWinner, useCasino } from "../../../../hooks/helpers/useCasino";
+import { CasinoInterface, useCasino } from "../../../../hooks/helpers/useCasino";
 import useUIStore from "../../../../hooks/store/useUIStore";
 
 type CaravanProps = {
@@ -34,12 +34,14 @@ export const CasinoCaravan = ({ caravan, casinoData, ...props }: CaravanProps) =
   const { getCasino } = useCasino();
 
   const [isLoading, setIsLoading] = useState(false);
+  console.log({ nextBlockTimestamp });
+  console.log({ arrivalTime });
   const hasArrived = arrivalTime !== undefined && nextBlockTimestamp !== undefined && arrivalTime <= nextBlockTimestamp;
 
   const {
     account: { account },
     setup: {
-      systemCalls: { casino_gamble_and_travel_back},
+      systemCalls: { casino_gamble_and_travel_back },
       components: { Resource, CaravanMembers, HomePosition, ForeignKey },
     },
   } = useDojo();
@@ -155,7 +157,7 @@ export const CasinoCaravan = ({ caravan, casinoData, ...props }: CaravanProps) =
             variant={hasArrived ? "success" : "danger"}
             className="ml-auto mt-auto p-2 !h-4 text-xxs !rounded-md"
           >
-            {hasArrived ? `Stake Your Chips`  : "On the way"}
+            {hasArrived ? `Stake Your Chips` : "On the way"}
           </Button>
         )}
         {isLoading && isMine && (
