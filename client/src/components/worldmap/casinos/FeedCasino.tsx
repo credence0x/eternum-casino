@@ -9,8 +9,6 @@ import { divideByPrecision, getContractPositionFromRealPosition, getEntityIdFrom
 import { useDojo } from "../../../DojoContext";
 import { Steps } from "../../../elements/Steps";
 import { Headline } from "../../../elements/Headline";
-import { OrderIcon } from "../../../elements/OrderIcon";
-import { orderNameDict, orders } from "@bibliothecadao/eternum";
 import { ResourceCost } from "../../../elements/ResourceCost";
 import clsx from "clsx";
 import { CasinoInterface, useCasino } from "../../../hooks/helpers/useCasino";
@@ -25,23 +23,23 @@ import useUIStore from "../../../hooks/store/useUIStore";
 
 type FeedCasinoPopupProps = {
   onClose: () => void;
-  order: number;
+  count: number;
 };
 
-export const FeedCasinoPopup = ({ onClose, order }: FeedCasinoPopupProps) => {
+export const FeedCasinoPopup = ({ onClose, count }: FeedCasinoPopupProps) => {
   const [selectedTab, setSelectedTab] = useState(0);
   const setTooltip = useUIStore((state) => state.setTooltip);
 
   const casinoPosition = useMemo(() => {
-    const { x, z } = casinos[order - 1];
+    const { x, z } = casinos[count - 1];
     return getContractPositionFromRealPosition({ x, y: z });
-  }, [order]);
+  }, [count]);
 
   const { getCasino } = useCasino();
-  const casinoData = getCasino(order, {
-    x: casinos[order - 1].x,
-    y: casinos[order - 1].y,
-    z: casinos[order - 1].z,
+  const casinoData = getCasino(count, {
+    x: casinos[count - 1].x,
+    y: casinos[count - 1].y,
+    z: casinos[count - 1].z,
   });
 
   const { caravans } = useGetPositionCaravans(casinoPosition.x, casinoPosition.y);
@@ -70,7 +68,7 @@ export const FeedCasinoPopup = ({ onClose, order }: FeedCasinoPopupProps) => {
         ),
         component: (
           <SendResourcesToCasinoPanel
-            order={order}
+            count={count}
             onSendCaravan={() => setSelectedTab(1)}
             onClose={onClose}
             casinoData={casinoData}
@@ -120,7 +118,7 @@ export const FeedCasinoPopup = ({ onClose, order }: FeedCasinoPopupProps) => {
           variant="default"
           className="h-full"
         >
-          <Tabs.List className="!border-t-transparent">
+          <Tabs.List className="!bcount-t-transparent">
             {tabs.map((tab, index) => (
               <Tabs.Tab key={index}>{tab.label}</Tabs.Tab>
             ))}
@@ -162,15 +160,14 @@ const SelectableRealm = ({ realm, selected = false, onClick, costs, ...props }: 
   return (
     <div
       className={clsx(
-        "flex flex-col relative items-center p-2 border rounded-md text-xxs text-gray-gold",
-        "border-gray-gold",
+        "flex flex-col relative items-center p-2 bcount rounded-md text-xxs text-gray-gold",
+        "bcount-gray-gold",
       )}
       {...props}
     >
       {realm && (
-        <div className="flex absolute items-center p-1 top-0 left-0 border border-t-0 border-l-0 rounded-br-md border-gray-gold">
-          {realm.order && <OrderIcon order={orderNameDict[realm.order]} size="xs" className="mr-1" />}
-          {realm.name}
+        <div className="flex absolute items-center p-1 top-0 left-0 bcount bcount-t-0 bcount-l-0 rounded-br-md bcount-gray-gold">
+          GumRoad
         </div>
       )}
       <div className="text-gold ml-auto absolute right-2 top-2">24h:10m away</div>
@@ -185,7 +182,7 @@ const SelectableRealm = ({ realm, selected = false, onClick, costs, ...props }: 
                   key={resource.id}
                   resourceId={resource.id}
                   amount={resource?.balance}
-                  color={resource.balance >= costById[resource.id] ? "" : "text-order-giants"}
+                  color={resource.balance >= costById[resource.id] ? "" : "text-count-giants"}
                 />
               );
             })}
@@ -199,12 +196,12 @@ const SelectableRealm = ({ realm, selected = false, onClick, costs, ...props }: 
 };
 
 const SendResourcesToCasinoPanel = ({
-  order,
+  count,
   onClose,
   onSendCaravan,
   casinoData,
 }: {
-  order: number;
+    count: number;
   onClose: () => void;
   onSendCaravan: () => void;
   casinoData: CasinoInterface | undefined;
@@ -216,34 +213,12 @@ const SendResourcesToCasinoPanel = ({
   const [step, setStep] = useState<number>(1);
   const [isLoading, setIsLoading] = useState(false);
 
-  const casinos = useUIStore((state) => state.casinos);
-  const setCasinos = useUIStore((state) => state.setCasinos);
-
   const {
     account: { account },
     setup: {
-      systemCalls: { casino_get_winner, send_resources_to_destination },
+      systemCalls: { send_resources_to_destination },
     },
   } = useDojo();
-
-  const { getCasinoRoundWinner, getCasino } = useCasino();
-
-  const updateCasino = () => {
-    const newCasino = getCasino(casinoData.orderId, casinoData.uiPosition);
-    casinos[casinoData.orderId - 1] = newCasino;
-    setCasinos([...casinos]);
-  };
-
-  const closeCasinoRoundAndPickWinner = async () => {
-    setIsLoading(true);
-    console.log({ casinoData });
-    await casino_get_winner({
-      signer: account,
-      casino_id: casinoData?.casinoId || 0,
-    });
-    updateCasino();
-    onClose();
-  };
 
   const sendResourcesToCasino = async () => {
     setIsLoading(true);
@@ -353,12 +328,10 @@ const SendResourcesToCasinoPanel = ({
       <div className="flex flex-col space-y-2 text-xs w-full mb-3">
         <div className="flex justify-between">
           <div className="flex items-center">
-            {<OrderIcon order={orderNameDict[order]} size="xs" className="mx-1" />}
-            <span className="text-white font-bold">{orders[order - 1].fullOrderName}</span>
+            <span className="text-white font-bold">Casino</span>
           </div>
           <div className="flex flex-col text-xxs text-right">
-            <span className="text-gray-gold italic">State</span>
-            <span className={clsx("text-gold")}> GAMBLE YOUR LIFE AWAY</span>
+            <span className={clsx("text-gold")}> Get Lucky</span>
           </div>
         </div>
         <ProgressBar rounded progress={casinoData?.progress || 0} className="bg-gold" />
@@ -369,7 +342,7 @@ const SendResourcesToCasinoPanel = ({
             <div className="relative w-full">
               <img src={`/images/buildings/casino.webp`} className="object-cover w-full h-full rounded-[10px]" />
               <div className="flex flex-col p-2 absolute left-2 bottom-2 rounded-[10px] bg-black/60">
-                <div className="mb-1 ml-1 italic text-light-pink text-xxs">"Minimum Deposit:"</div>
+                <div className="mb-1 ml-1 italic text-light-pink text-xxs">"Deposit Amount:"</div>
                 <div className="grid grid-cols-4 gap-1">
                   {casinoData?.minimumDepositResources.map(({ resourceId, amount }) => (
                     <ResourceCost
@@ -385,10 +358,10 @@ const SendResourcesToCasinoPanel = ({
             </div>
             <Headline size="big">Send caravan to Casino- Step {step}</Headline>
             <div className="text-xxs mb-2 italic text-gold">
-              To gamble at the Casino you need to send a caravan with minumum resources deposit to the Casino location.
+              To gamble at the Casino you need to send a caravan with the required resources deposit to the Casino
             </div>
 
-            <div className="text-xxs mb-2 italic text-white">{`Click the "Next" button to select a Realm from which you want to spend resources.`}</div>
+            <div className="text-xxs mb-2 italic text-white">{`Click the "Next Step" button to select a Realm from which you want to spend resources.`}</div>
           </div>
         </>
       )}
@@ -450,14 +423,7 @@ const SendResourcesToCasinoPanel = ({
               if (step == 3) {
                 sendResourcesToCasino();
               } else {
-                if (isComplete) {
-                  closeCasinoRoundAndPickWinner();
-
-                  let winnerEntityId = getCasinoRoundWinner(casinoData?.casinoId || 0, casinoData.currentRoundId);
-                  alert(`Winner is ${winnerEntityId}`);
-                } else {
-                  setStep(step + 1);
-                }
+                setStep(step + 1);
               }
             }}
             variant={canGoToNextStep ? "success" : "outline"}

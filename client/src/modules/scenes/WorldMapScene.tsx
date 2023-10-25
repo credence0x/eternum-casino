@@ -13,8 +13,6 @@ export const WorldMapScene = () => {
   const hyperstructures = useUIStore((state) => state.hyperstructures);
   const casinos = useUIStore((state) => state.casinos);
 
-  console.log(casinos)
-
   return (
     <>
       <Flags />

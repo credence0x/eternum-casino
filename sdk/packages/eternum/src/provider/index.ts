@@ -590,7 +590,7 @@ export class EternumProvider extends RPCProvider {
       {
         contractAddress: this.contracts.TRAVEL_SYSTEMS,
         entrypoint: "travel",
-        calldata: [this.contracts.WORLD_ADDRESS, entity_id, destination_coord_x, destination_coord_y],
+        calldata: [this.contracts.WORLD_ADDRESS, caravan_id, destination_coord_x, destination_coord_y],
       },
     ]);
     return await this.provider.waitForTransaction(tx.transaction_hash, {

@@ -6,7 +6,7 @@ import { getContractPositionFromRealPosition, getEntityIdFromKeys } from "../../
 
 export interface CasinoInterface {
   casinoId: number;
-  orderId: number;
+  count: number;
   currentRoundId: number;
   progress: number;
   casinoCurrentRoundResources: {
@@ -22,6 +22,12 @@ export interface CasinoInterface {
   uiPosition: UIPosition;
 }
 
+export interface CasinoRoundInterface {
+  roundIndex: number;
+  winnerId: number;
+  participantCount: number;
+}
+
 export const useCasino = () => {
   const {
     setup: {
@@ -29,29 +35,21 @@ export const useCasino = () => {
     },
   } = useDojo();
 
-  const getCasinoRoundWinner = (casinoId: number, roundId: number) => {
-    let casinoRound = getComponentValue(CasinoRound, getEntityIdFromKeys([BigInt(casinoId), BigInt(roundId)]));
-
-    return casinoRound.winner_id;
-  };
-
-  const getCasino = (orderId: number, uiPosition: UIPosition): CasinoInterface | undefined => {
+  const getCasino = (count: number, uiPosition: UIPosition): CasinoInterface | undefined => {
     const position = getContractPositionFromRealPosition({ x: uiPosition.x, y: uiPosition.z });
-    const casinId = runQuery([Has(CasinoMetaData), HasValue(Position, { x: position.x, y: position.y })]);
-
-    if (casinId.size > 0) {
-      let casinoId = Array.from(casinId)[0];
-      if (orderId == 1) {
-        // other things exists on the same position for some reason
-        casinoId = Array.from(casinId)[Array.from(casinId).length - 1];
-      }
+    const casinoMetaDatas = runQuery([Has(CasinoMetaData), HasValue(Position, { x: position.x, y: position.y })]);
+    console.log("casinoMetaDatas", casinoMetaDatas);
+    if (casinoMetaDatas.size > 0) {
+      let casinoId = Array.from(casinoMetaDatas)[
+        Array.from(casinoMetaDatas).length - 1
+      ];
 
       let casino = getComponentValue(CasinoMetaData, casinoId);
-      console.log({ casino });
 
       if (casino) {
         let casinoCurrentRoundResources: { resourceId: number; currentAmount: number; completeAmount: number }[] = [];
-        casinoData[orderId - 1].resources.minimum_completion.forEach((resource) => {
+        console.log("casinoData", casinoData, count, casinoData[count - 1]);
+        casinoData[count - 1].resources.minimum_completion.forEach((resource) => {
           let casinoRoundResource = getComponentValue(
             Resource,
             getEntityIdFromKeys([BigInt(casino.current_round_id), BigInt(resource.resourceType)]),
@@ -74,11 +72,11 @@ export const useCasino = () => {
 
         return {
           casinoId,
-          orderId,
+          count,
           currentRoundId: casino.current_round_id,
           progress,
           casinoCurrentRoundResources,
-          minimumDepositResources: casinoData[orderId - 1].resources.minimum_deposit.map((resource) => {
+          minimumDepositResources: casinoData[count - 1].resources.minimum_deposit.map((resource) => {
             return {
               resourceId: resource.resourceType, // Fixed: changed semicolon to comma
               amount: resource.amount,
@@ -91,20 +89,28 @@ export const useCasino = () => {
     }
   };
 
+
+
+  const getCasinoRounds = (): Array<CasinoRoundInterface | undefined> | undefined => {
+    const casinoRounds = runQuery([Has(CasinoRound)]);
+    let result = [];
+    for (let i = 0; i < casinoRounds.size; i++) {
+      let casinoRoundId = Array.from(casinoRounds)[i]
+
+      let casinoRound = getComponentValue(CasinoRound, casinoRoundId);
+
+      result.push({
+        roundIndex: casinoRound.round_index,
+        winnerId: casinoRound.winner_id,
+        participantCount: casinoRound.participant_count,
+      })
+    }
+
+    return result;
+  };
+
   return {
     getCasino,
-    getCasinoRoundWinner,
+    getCasinoRounds,
   };
 };
-
-// export const getCasinoRoundWinner = (casinoId, roundId) => {
-//   const {
-//     setup: {
-//       components: { CasinoRound },
-//     },
-//   } = useDojo();
-
-//   let casinoRound = getComponentValue(CasinoRound, getEntityIdFromKeys([BigInt(casinoId), BigInt(roundId)]));
-
-//   return casinoRound.winner_id;
-// };
