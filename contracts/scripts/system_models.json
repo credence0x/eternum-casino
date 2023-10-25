@@ -3,6 +3,7 @@
         "CasinoMetaData",
         "CasinoRound",
         "Position",
+        "Owner",
         "ResourceCost"
     ],
     "CASINO_PLAY_SYSTEMS": [
@@ -10,7 +11,9 @@
         "CasinoRound",
         "CasinoRoundParticipant",
         "Resource",
-        "ResourceCost"
+        "ResourceCost",
+        "Owner",
+        "Position"
     ],
     "NEW_RESOURCE_SYSTEMS": [
         "Resource",

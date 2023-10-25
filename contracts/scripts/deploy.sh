@@ -13,15 +13,21 @@ if [[ "$1" == "prod" ]]; then
         echo "Aborting."
         exit 1
     fi
-
-    DELAY=3
-    sozo build && sozo migrate && source ./scripts/env_variables.sh prod && echo "\n\n\n" && ./scripts/set_config.sh $DELAY
-else 
+    
+    (
+        sozo build && 
+        sozo migrate && 
+        source ./scripts/env_variables.sh prod && 
+        ./scripts/set_config.sh --delay 3
+    )else 
     # set color orange
     echo "\033[0;33m"
     echo "\n\nBUILDING AND DEPLOYING TO DEV \n\n"
     echo "\033[0m"
-
-    DELAY=1
-    sozo build && sozo migrate && source ./scripts/env_variables.sh && echo "\n\n\n" && ./scripts/set_config.sh $DELAY
+    (
+        sozo build && 
+        sozo migrate && 
+        source ./scripts/env_variables.sh && 
+        ./scripts/set_config.sh --delay 1
+    )
 fi

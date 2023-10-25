@@ -37,39 +37,18 @@ commands+=(
     #     # Define casinos
     #     # @dev generated using data/casinos/generateCommands.js
     #     # data => ./contracts/src/scripts/casinos/casinos.json
-    "sozo execute $CASINO_CONFIG_SYSTEMS create --account-address $DOJO_ACCOUNT_ADDRESS --calldata $SOZO_WORLD,1622610,2103276,4,1,10000,2,10000,3,10000,4,10000,4,1,100000,2,100000,3,100000,4,100000"
-    "sozo execute $CASINO_CONFIG_SYSTEMS create --account-address $DOJO_ACCOUNT_ADDRESS --calldata $SOZO_WORLD,2651909,1458147,4,1,10000,2,10000,3,10000,4,10000,4,1,100000,2,100000,3,100000,4,100000"
-    "sozo execute $CASINO_CONFIG_SYSTEMS create --account-address $DOJO_ACCOUNT_ADDRESS --calldata $SOZO_WORLD,1620208,1764081,4,1,10000,2,10000,3,10000,4,10000,4,1,100000,2,100000,3,100000,4,100000"
-    "sozo execute $CASINO_CONFIG_SYSTEMS create --account-address $DOJO_ACCOUNT_ADDRESS --calldata $SOZO_WORLD,2949158,2127177,4,1,10000,2,10000,3,10000,4,10000,4,1,100000,2,100000,3,100000,4,100000"
-    "sozo execute $CASINO_CONFIG_SYSTEMS create --account-address $DOJO_ACCOUNT_ADDRESS --calldata $SOZO_WORLD,710492,1446359,4,1,10000,2,10000,3,10000,4,10000,4,1,100000,2,100000,3,100000,4,100000"
-    "sozo execute $CASINO_CONFIG_SYSTEMS create --account-address $DOJO_ACCOUNT_ADDRESS --calldata $SOZO_WORLD,2475183,2275580,4,1,10000,2,10000,3,10000,4,10000,4,1,100000,2,100000,3,100000,4,100000"
-    "sozo execute $CASINO_CONFIG_SYSTEMS create --account-address $DOJO_ACCOUNT_ADDRESS --calldata $SOZO_WORLD,1984116,2171570,4,1,10000,2,10000,3,10000,4,10000,4,1,100000,2,100000,3,100000,4,100000"
-    "sozo execute $CASINO_CONFIG_SYSTEMS create --account-address $DOJO_ACCOUNT_ADDRESS --calldata $SOZO_WORLD,1382094,1993452,4,1,10000,2,10000,3,10000,4,10000,4,1,100000,2,100000,3,100000,4,100000"
-    "sozo execute $CASINO_CONFIG_SYSTEMS create --account-address $DOJO_ACCOUNT_ADDRESS --calldata $SOZO_WORLD,863997,1873356,4,1,10000,2,10000,3,10000,4,10000,4,1,100000,2,100000,3,100000,4,100000"
-    "sozo execute $CASINO_CONFIG_SYSTEMS create --account-address $DOJO_ACCOUNT_ADDRESS --calldata $SOZO_WORLD,2539517,1884363,4,1,10000,2,10000,3,10000,4,10000,4,1,100000,2,100000,3,100000,4,100000"
-    "sozo execute $CASINO_CONFIG_SYSTEMS create --account-address $DOJO_ACCOUNT_ADDRESS --calldata $SOZO_WORLD,1067424,1476206,4,1,10000,2,10000,3,10000,4,10000,4,1,100000,2,100000,3,100000,4,100000"
-    "sozo execute $CASINO_CONFIG_SYSTEMS create --account-address $DOJO_ACCOUNT_ADDRESS --calldata $SOZO_WORLD,1542668,1517683,4,1,10000,2,10000,3,10000,4,10000,4,1,100000,2,100000,3,100000,4,100000"
-    "sozo execute $CASINO_CONFIG_SYSTEMS create --account-address $DOJO_ACCOUNT_ADDRESS --calldata $SOZO_WORLD,1936818,1409047,4,1,10000,2,10000,3,10000,4,10000,4,1,100000,2,100000,3,100000,4,100000"
-    "sozo execute $CASINO_CONFIG_SYSTEMS create --account-address $DOJO_ACCOUNT_ADDRESS --calldata $SOZO_WORLD,2102443,1712964,4,1,10000,2,10000,3,10000,4,10000,4,1,100000,2,100000,3,100000,4,100000"
-    "sozo execute $CASINO_CONFIG_SYSTEMS create --account-address $DOJO_ACCOUNT_ADDRESS --calldata $SOZO_WORLD,2874078,1697894,4,1,10000,2,10000,3,10000,4,10000,4,1,100000,2,100000,3,100000,4,100000"
-    "sozo execute $CASINO_CONFIG_SYSTEMS create --account-address $DOJO_ACCOUNT_ADDRESS --calldata $SOZO_WORLD,575410,2023632,4,1,10000,2,10000,3,10000,4,10000,4,1,100000,2,100000,3,100000,4,100000"
-
+    "sozo execute $CASINO_CONFIG_SYSTEMS create --account-address $DOJO_ACCOUNT_ADDRESS --calldata $SOZO_WORLD,$CASINO_PLAY_SYSTEMS,1620208,1764081,4,1,10000,2,10000,3,10000,4,10000,4,1,100000,2,100000,3,100000,4,100000"
 )
 
-
-# # Ask the user for the desired delay between commands
-# read -p "Specify a delay in seconds between each command (or press Enter for no delay): " delay
-
-# # Check if the delay is a valid number (integer or floating point)
-# if [[ ! "$delay" =~ ^[0-9]*\.?[0-9]+$ ]]; then
-#     delay=0
-# fi
-
-if [ "$1" ]; then
-    delay="$1"
+#Ensure there is a --delay flag
+if [ "$1" == "--delay" ]; then
+    # get the delay value
+    delay="$2"
 else
-    delay=0
+    echo "Please specify a delay in seconds between each command with the --delay flag"
+    exit 1
 fi
+
 
 for cmd in "${commands[@]}"; do
     echo "Executing command: $cmd"
