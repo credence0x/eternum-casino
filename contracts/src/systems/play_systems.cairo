@@ -183,14 +183,25 @@ mod casino_play_systems {
             casino.total_rounds_played += 1;
             set!(world, (casino));
 
+            let casino_position = get!(world, casino.entity_id, Position);
+
             // create next round
             set!(world, (
+                Owner {
+                    entity_id: casino.current_round_id,
+                    address: starknet::get_contract_address()
+                },
                 CasinoRound {
                     casino_id: casino.entity_id,
                     round_id: casino.current_round_id,
                     round_index: casino.total_rounds_played,
                     winner_id: 0,
                     participant_count: 0
+                }, 
+                Position {
+                    entity_id: casino.current_round_id,
+                    x: casino_position.x,
+                    y: casino_position.y
                 }
             ));
             

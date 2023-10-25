@@ -6,13 +6,17 @@ mod casino_config_systems {
     use eternum::alias::ID;
     use eternum::models::position::{Position, Coord};
     use eternum::models::resources::ResourceCost;
+    use eternum::models::owner::Owner;
+
+    use starknet::ContractAddress;
 
 
     #[external(v0)]
     impl CasinoConfigSystemsImpl of ICasinoConfigSystems<ContractState>{
 
         fn create(
-            self: @ContractState, world: IWorldDispatcher, location: Coord, 
+            self: @ContractState, world: IWorldDispatcher, 
+            casino_play_systems_address: ContractAddress,location: Coord, 
             min_deposit_resources: Span<(u8, u128)>, min_closing_resources: Span<(u8, u128)>
         ) -> ID {
 
@@ -100,12 +104,21 @@ mod casino_config_systems {
 
             // make first round
             set!(world, (
+                Owner {
+                    entity_id: round_id,
+                    address: casino_play_systems_address
+                },
                 CasinoRound {
                     casino_id: casino_id,
                     round_id: round_id,
                     round_index: 0,
                     winner_id: 0,
                     participant_count: 0
+                },
+                Position {
+                    entity_id: round_id,
+                    x: location.x,
+                    y: location.y
                 }
             ));
      
