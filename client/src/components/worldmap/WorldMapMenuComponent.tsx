@@ -84,7 +84,7 @@ const WorldMapMenuComponent = () => {
           onMouseLeave={() => setTooltip(null)}
           className="flex relative group flex-col items-center"
         >
-          <CrownCircle className="mb-2 fill-gold" /> <div>Casinos</div>
+          <CrownCircle className="mb-2 fill-gold" /> <div>Casino</div>
         </div>
       ),
       component: <CasinosPanel />,
