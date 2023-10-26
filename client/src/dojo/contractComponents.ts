@@ -625,5 +625,20 @@ export function defineContractComponents(world: World) {
         },
       );
     })(),
+    ResourceAllowance: (() => {
+      const name = "ResourceAllowance";
+      return defineComponent(
+        world,
+        {
+          resource_type: RecsType.Number,
+          amount: RecsType.Number,
+        },
+        {
+          metadata: {
+            name: name,
+          },
+        },
+      );
+    })(),
   };
 }

@@ -1,11 +1,5 @@
-import { FiltersPanel } from "../../../elements/FiltersPanel";
-import { FilterButton } from "../../../elements/FilterButton";
 import useRealmStore from "../../../hooks/store/useRealmStore";
-import { useEffect, useMemo, useState } from "react";
-import { getRealm } from "../../../utils/realms";
-import { useDojo } from "../../../DojoContext";
-import { ReactComponent as Map } from "../../../assets/icons/common/map.svg";
-
+import { useState } from "react";
 
 import { FeedCasinoPopup } from "./FeedCasino";
 import useUIStore from "../../../hooks/store/useUIStore";
@@ -23,7 +17,6 @@ export const CasinoWinnerComponent = ({ }: CasinoWinnerComponentProps) => {
   let ownedRealms = realmEntityIds.map((x) => x.realmEntityId);
 
   console.log(realmEntityIds.map((x) => x.realmEntityId))
-  console.log(realmEntityIds.map((x) => x.realmId))
 
   const casinoRounds = getCasinoRounds();
   setCasinoRounds(casinoRounds);
@@ -49,29 +42,39 @@ export const CasinoWinnerComponent = ({ }: CasinoWinnerComponentProps) => {
               <br></br>
               {casinoRounds.map((round, i) =>
               (
+                <div>
+                  <div className="text-gold text-xs flex ml-auto ">
+                    <div className="flex ml-auto ">
+                      Round: {round.roundIndex + 1} &nbsp;
+                      Winner: {
+                        i == casinoRounds.length - 1 ? "IN PROGRESS" : ownedRealms.includes(round.winnerId) ? "YOU WON!!!" : "YOU DIDN'T WIN"
+                      }
+                      &nbsp;
+                      Participants: {round.participantCount}&nbsp;&nbsp;&nbsp;&nbsp;
+                    </div>
 
-                <div className=" text-gold text-xs flex ml-auto ">
-
-                  <div className=" text-gold flex ml-auto ">
-                    Round: {round.roundIndex + 1} &nbsp;
-                    Winner: {
-                      ownedRealms.includes(round.winnerId) ? "YOU" : "NOT YOU"
-                    }
-                    &nbsp;
-                    Participants: {round.participantCount}&nbsp;&nbsp;&nbsp;&nbsp;
-                    {(
-                      <Button
-                        className="p-1 !h-4 text-xxs !rounded-md"
-                        variant="outline"
-                        onClick={() => {
-                          // transport empty caravan to casino
-                        }}
-                      >
-                        Travel to Claim
-
-                      </Button>
-                    )}
                   </div>
+
+
+
+                  {ownedRealms.includes(round.winnerId) && (
+                    <div className="text-gold text-xs m-4 flex justify-center ">
+
+                      <div className="">
+                        <Button
+                          className="p-3 !h-5 text-xxs !rounded-md"
+                          variant="success"
+                          onClick={() => {
+                            // transport empty caravan to casino
+                          }}
+                        >
+                          Travel to Claim
+
+                        </Button>
+                      </div>
+                    </div>
+
+                  )}
                   <br></br>
                   <br></br>
                 </div>

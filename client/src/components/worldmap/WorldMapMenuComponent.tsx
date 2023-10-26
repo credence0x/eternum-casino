@@ -2,6 +2,7 @@ import { useMemo, useState } from "react";
 import { ReactComponent as Relic } from "../../assets/icons/common/relic.svg";
 import { ReactComponent as City } from "../../assets/icons/common/city.svg";
 import { ReactComponent as World } from "../../assets/icons/common/world.svg";
+import { ReactComponent as CrownCircle } from "../../assets/icons/common/crown-circle-outline.svg";
 import { useLocation } from "wouter";
 import { Tabs } from "../../elements/tab";
 import RealmsListPanel from "./RealmsListPanel";
@@ -83,7 +84,7 @@ const WorldMapMenuComponent = () => {
           onMouseLeave={() => setTooltip(null)}
           className="flex relative group flex-col items-center"
         >
-          <Relic className="mb-2 fill-gold" /> <div>Casinos</div>
+          <CrownCircle className="mb-2 fill-gold" /> <div>Casinos</div>
         </div>
       ),
       component: <CasinosPanel />,

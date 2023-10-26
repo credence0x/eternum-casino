@@ -38,7 +38,6 @@ export const useCasino = () => {
   const getCasino = (count: number, uiPosition: UIPosition): CasinoInterface | undefined => {
     const position = getContractPositionFromRealPosition({ x: uiPosition.x, y: uiPosition.z });
     const casinoMetaDatas = runQuery([Has(CasinoMetaData), HasValue(Position, { x: position.x, y: position.y })]);
-    console.log("casinoMetaDatas", casinoMetaDatas);
     if (casinoMetaDatas.size > 0) {
       let casinoId = Array.from(casinoMetaDatas)[
         Array.from(casinoMetaDatas).length - 1
@@ -48,7 +47,6 @@ export const useCasino = () => {
 
       if (casino) {
         let casinoCurrentRoundResources: { resourceId: number; currentAmount: number; completeAmount: number }[] = [];
-        console.log("casinoData", casinoData, count, casinoData[count - 1]);
         casinoData[count - 1].resources.minimum_completion.forEach((resource) => {
           let casinoRoundResource = getComponentValue(
             Resource,
@@ -56,7 +54,7 @@ export const useCasino = () => {
           );
           casinoCurrentRoundResources.push({
             resourceId: resource.resourceType,
-            currentAmount: Math.min(casinoRoundResource?.balance ?? 0, resource.amount),
+            currentAmount: casinoRoundResource?.balance ?? 0,
             completeAmount: resource.amount,
           });
         });
@@ -105,6 +103,9 @@ export const useCasino = () => {
         participantCount: casinoRound.participant_count,
       })
     }
+
+    // sort the result by round index
+    result.sort((a, b) => a?.roundIndex - b?.roundIndex);
 
     return result;
   };

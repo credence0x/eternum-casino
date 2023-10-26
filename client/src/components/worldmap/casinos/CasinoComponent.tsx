@@ -1,16 +1,9 @@
-import { FiltersPanel } from "../../../elements/FiltersPanel";
-import { FilterButton } from "../../../elements/FilterButton";
-import useRealmStore from "../../../hooks/store/useRealmStore";
-import { useEffect, useMemo, useState } from "react";
-import { getRealm } from "../../../utils/realms";
+import { useState } from "react";
 import { useDojo } from "../../../DojoContext";
-import { ReactComponent as Map } from "../../../assets/icons/common/map.svg";
-import dataCasinos from "../../..//data/casinos.json";
 
 import { FeedCasinoPopup } from "./FeedCasino";
 import useUIStore from "../../../hooks/store/useUIStore";
 import Button from "../../../elements/Button";
-import ProgressBar from "../../../elements/ProgressBar";
 import { ResourceCost } from "../../../elements/ResourceCost";
 import { useCasino } from "../../../hooks/helpers/useCasino";
 
@@ -36,17 +29,9 @@ export const CasinoComponent = ({ }: CasinoComponentProps) => {
   } = useDojo();
 
 
-  // useEffect(() => {
-  //   setCasinos(
-  //     dataCasinos.map((casino, index) =>
-  //       getCasino(index + 1, { x: casino.x, y: casino.y, z: casino.z }),
-  //     )
-  //   );
-  // }, [casinos]);
-
   const updateCasino = () => {
     const count = 1;
-    const newCasino = getCasino(count - 1, casinos[count - 1].uiPosition);
+    const newCasino = getCasino(count, casinos[count - 1].uiPosition);
     casinos[count - 1] = newCasino;
     setCasinos([...casinos]);
   };
@@ -59,37 +44,8 @@ export const CasinoComponent = ({ }: CasinoComponentProps) => {
     });
     updateCasino();
     setIsLoading(false);
-    // onClose();
   };
 
-  // {!isLoading && (
-  //   <Button
-  //     className="!px-[6px] !py-[2px] text-xxs ml-auto"
-  //     disabled={!canGoToNextStep}
-  //     isLoading={isLoading}
-  //     onClick={() => {
-  //       if (step == 3) {
-  //         sendResourcesToCasino();
-  //       } else {
-  //         setStep(step + 1);
-  //       }
-  //     }}
-  //     variant={canGoToNextStep ? "success" : "outline"}
-  //   >
-  //     {step == 3 ? "Send Caravan" : isComplete ? "Get Round Winner" : "Next Step"}
-  //   </Button>
-  // )}
-  // {isLoading && (
-  //   <Button
-  //     isLoading={true}
-  //     onClick={() => {}}
-  //     variant="danger"
-  //     className="ml-auto p-2 !h-4 text-xxs !rounded-md"
-  //   >
-  //     {" "}
-  //     {}{" "}
-  //   </Button>
-  // )}
   return (
     <>
       {count && showFeedPopup && <FeedCasinoPopup onClose={() => setShowFeedPopup(false)} count={count} />}
@@ -107,7 +63,6 @@ export const CasinoComponent = ({ }: CasinoComponentProps) => {
           <div className="flex justify-center p-0 rounded-md text-xxs text-gray-gold">
             <div className="flex items-center">
               <div className=" text-gold flex ml-auto ">
-
                 {!isLoading && casinos[count - 1]?.progress < 100 ? (
                   <Button
                     className="p-1 !h-4 text-xxs !rounded-md"
@@ -117,17 +72,17 @@ export const CasinoComponent = ({ }: CasinoComponentProps) => {
                       setShowFeedPopup(true);
                     }}
                   >
-                    Enter Round
+                    GAMBLE YOUR RESOURCES 
                   </Button>
                 ) : !isLoading ? (
                   <Button
-                    className="p-1 !h-4 text-xxs !rounded-md"
-                    variant="outline"
+                      className="p-3 !h-4 text-xxs !rounded-md"
+                      variant="success"
                     onClick={() => {
                       closeCasinoRoundAndPickWinner();
                     }}
                   >
-                    GET WINNER
+                      GET WINNER OF CURRENT ROUND
                   </Button>
 
                 ) :
@@ -152,7 +107,7 @@ export const CasinoComponent = ({ }: CasinoComponentProps) => {
 
 
             <div className="flex flex-col p-2 relative bottom-2 rounded-[10px] bg-black/60">
-              <div className="mb-1 ml-1 italic text-light-pink text-xxs">Resources at Stake</div>
+              <div className="mb-1 ml-1 italic text-light-pink text-xxs">Total resources deposited for current round</div>
               <div className="grid grid-cols-4 gap-1">
                 {casinos[count - 1]?.casinoCurrentRoundResources.map(({ resourceId, currentAmount }) => (
                   <ResourceCost
@@ -176,7 +131,7 @@ export const CasinoComponent = ({ }: CasinoComponentProps) => {
                     type="horizontal"
                     key={resourceId}
                     resourceId={resourceId}
-                    amount={completeAmount - currentAmount}
+                    amount={Math.max(0, completeAmount - currentAmount)}
                   />
                 ))}
               </div>

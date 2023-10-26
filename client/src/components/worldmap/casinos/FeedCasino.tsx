@@ -17,9 +17,10 @@ import ProgressBar from "../../../elements/ProgressBar";
 import { CasinoCaravansPanel } from "./CasinoCaravans/CasinoCaravansPanel";
 import casinos from "../../../data/casinos.json";
 import { useGetPositionCaravans } from "../../../hooks/helpers/useCaravans";
-import { WEIGHT_PER_DONKEY_KG } from "@bibliothecadao/eternum";
+import { WEIGHT_PER_DONKEY_KG, orderNameDict } from "@bibliothecadao/eternum";
 import { ReactComponent as CloseIcon } from "../../../assets/icons/common/cross-circle.svg";
 import useUIStore from "../../../hooks/store/useUIStore";
+import { OrderIcon } from "../../../elements/OrderIcon";
 
 type FeedCasinoPopupProps = {
   onClose: () => void;
@@ -86,7 +87,7 @@ export const FeedCasinoPopup = ({ onClose, count }: FeedCasinoPopupProps) => {
                 content: (
                   <>
                     <p className="whitespace-nowrap">Watch incoming caravans.</p>
-                    <p className="whitespace-nowrap">Pass resources to Casino on arriving.</p>
+                    <p className="whitespace-nowrap">Gamble resources when your caravan arrives.</p>
                   </>
                 ),
               })
@@ -94,7 +95,7 @@ export const FeedCasinoPopup = ({ onClose, count }: FeedCasinoPopupProps) => {
             onMouseLeave={() => setTooltip(null)}
             className="flex group relative flex-col items-center"
           >
-            <div>{`Caravans at Casino (${caravans.length})`}</div>
+            <div>{`Casino (${caravans.length} Caravans)`}</div>
           </div>
         ),
         component: casinoData ? <CasinoCaravansPanel caravans={caravans} casinoData={casinoData} /> : <></>,
@@ -107,7 +108,7 @@ export const FeedCasinoPopup = ({ onClose, count }: FeedCasinoPopupProps) => {
     <SecondaryPopup name="casino">
       <SecondaryPopup.Head>
         <div className="flex items-center space-x-1">
-          <div className="mr-0.5 bg-gray">Manage Casino:</div>
+          <div className="mr-0.5 bg-gray">View Casino:</div>
           <CloseIcon className="w-3 h-3 cursor-pointer fill-white" onClick={onClose} />
         </div>
       </SecondaryPopup.Head>
@@ -167,10 +168,12 @@ const SelectableRealm = ({ realm, selected = false, onClick, costs, ...props }: 
     >
       {realm && (
         <div className="flex absolute items-center p-1 top-0 left-0 bcount bcount-t-0 bcount-l-0 rounded-br-md bcount-gray-gold">
-          GumRoad
+          {realm.order && <OrderIcon order={orderNameDict[realm.order]} size="xs" className="mr-1" />}
+          {realm.name}
         </div>
+
       )}
-      <div className="text-gold ml-auto absolute right-2 top-2">24h:10m away</div>
+      <div className="text-gold ml-auto absolute right-2 top-2">distance: </div>
       <div className="flex items-center mt-6 w-full">
         <div className="flex">
           {realm.resources &&
@@ -260,9 +263,6 @@ const SendResourcesToCasinoPanel = ({
   const realmEntityIds = useRealmStore((state) => state.realmEntityIds);
   const realmEntityId = useRealmStore((state) => state.realmEntityId);
   const setRealmEntityId = useRealmStore((state) => state.setRealmEntityId);
-
-  const isComplete = casinoData && casinoData?.progress >= 100;
-  console.log({ isComplete });
 
   // TODO: use same precision everywhere
   const resourceWeight = useMemo(() => {
@@ -428,7 +428,7 @@ const SendResourcesToCasinoPanel = ({
             }}
             variant={canGoToNextStep ? "success" : "outline"}
           >
-            {step == 3 ? "Send Caravan" : isComplete ? "Get Round Winner" : "Next Step"}
+            {step == 3 ? "Send Caravan" : "Next Step"}
           </Button>
         )}
         {isLoading && (

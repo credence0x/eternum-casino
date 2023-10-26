@@ -79,8 +79,7 @@ export const CasinoCaravan = ({ caravan, casinoData, ...props }: CaravanProps) =
 
   const updateCasino = () => {
     const casinoCount = 1
-    console.log("yuiiiii")
-    const newCasino = getCasino(casinoCount - 1, casinoData.uiPosition);
+    const newCasino = getCasino(casinoCount, casinoData.uiPosition);
     casinos[casinoCount - 1] = newCasino;
     setCasinos([...casinos]);
   };
@@ -165,7 +164,7 @@ export const CasinoCaravan = ({ caravan, casinoData, ...props }: CaravanProps) =
             variant={hasArrived ? "success" : "danger"}
             className="ml-auto mt-auto p-2 !h-4 text-xxs !rounded-md"
           >
-            {hasArrived ? `Stake Your Chips` : "On the way"}
+            {hasArrived ? `Gamble` : "On the way"}
           </Button>
         )}
         {isLoading && isMine && (
