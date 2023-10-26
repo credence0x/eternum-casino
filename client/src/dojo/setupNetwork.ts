@@ -8,8 +8,7 @@ export type SetupNetworkResult = Awaited<ReturnType<typeof setupNetwork>>;
 export async function setupNetwork() {
   const provider = new EternumProvider(
     import.meta.env.VITE_WORLD_ADDRESS!,
-    false,
-    // import.meta.env.DEV,
+    import.meta.env.DEV,
     import.meta.env.VITE_KATANA_URL,
   );
 

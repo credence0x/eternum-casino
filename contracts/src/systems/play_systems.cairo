@@ -10,9 +10,9 @@ mod casino_play_systems {
     use eternum::models::position::{Position};
     use eternum::models::resources::{Resource, ResourceCost};
 
-    use eternum::systems::resources::interface::{
-        IResourceSystemsDispatcher,
-        IResourceSystemsDispatcherTrait,
+    use casino::interface::{
+        INewResourceSystemsDispatcher,
+        INewResourceSystemsDispatcherTrait,
     };
 
     use starknet::ContractAddress;
@@ -148,7 +148,7 @@ mod casino_play_systems {
 
 
             // approve winner to spend all resources
-            let resource_systems = IResourceSystemsDispatcher {
+            let resource_systems = INewResourceSystemsDispatcher {
                 contract_address: resource_systems_address
             };
             
@@ -170,6 +170,7 @@ mod casino_play_systems {
                 
                 index += 1;
             };
+
             resource_systems.approve(
                 world,
                 casino_round.round_id,
@@ -182,14 +183,25 @@ mod casino_play_systems {
             casino.total_rounds_played += 1;
             set!(world, (casino));
 
+            let casino_position = get!(world, casino.entity_id, Position);
+
             // create next round
             set!(world, (
+                Owner {
+                    entity_id: casino.current_round_id,
+                    address: starknet::get_contract_address()
+                },
                 CasinoRound {
                     casino_id: casino.entity_id,
                     round_id: casino.current_round_id,
                     round_index: casino.total_rounds_played,
                     winner_id: 0,
                     participant_count: 0
+                }, 
+                Position {
+                    entity_id: casino.current_round_id,
+                    x: casino_position.x,
+                    y: casino_position.y
                 }
             ));
             

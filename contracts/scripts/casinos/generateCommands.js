@@ -24,7 +24,7 @@ casinos.forEach((casino) => {
   const coordY = parseInt(y * 10000 + 1800000);
 
   // Constructing the command
-  commands += `"sozo execute $CONFIG_SYSTEMS create --account-address $DOJO_ACCOUNT_ADDRESS --calldata $SOZO_WORLD,${coordX},${coordY},${numDepositResources},${depositStrings},${numCompletionResources},${completionStrings}"\n`;
+  commands += `"sozo execute $CASINO_CONFIG_SYSTEMS create --account-address $DOJO_ACCOUNT_ADDRESS --calldata $SOZO_WORLD,$CASINO_PLAY_SYSTEMS,${coordX},${coordY},${numDepositResources},${depositStrings},${numCompletionResources},${completionStrings}"\n`;
 });
 
 console.log(commands);

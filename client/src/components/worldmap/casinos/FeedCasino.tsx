@@ -5,48 +5,42 @@ import { SelectCaravanPanel } from "../../cityview/realm/trade/CreateOffer";
 import useRealmStore from "../../../hooks/store/useRealmStore";
 import { getRealm } from "../../../utils/realms";
 import { getComponentValue } from "@latticexyz/recs";
-import {
-  divideByPrecision,
-  getContractPositionFromRealPosition,
-  getEntityIdFromKeys,
-  
-} from "../../../utils/utils";
+import { divideByPrecision, getContractPositionFromRealPosition, getEntityIdFromKeys } from "../../../utils/utils";
 import { useDojo } from "../../../DojoContext";
 import { Steps } from "../../../elements/Steps";
 import { Headline } from "../../../elements/Headline";
-import { OrderIcon } from "../../../elements/OrderIcon";
-import { orderNameDict, orders } from "@bibliothecadao/eternum";
 import { ResourceCost } from "../../../elements/ResourceCost";
 import clsx from "clsx";
-import { CasinoInterface, getCasinoRoundWinner, useCasino } from "../../../hooks/helpers/useCasino";
+import { CasinoInterface, useCasino } from "../../../hooks/helpers/useCasino";
 import { Tabs } from "../../../elements/tab";
 import ProgressBar from "../../../elements/ProgressBar";
 import { CasinoCaravansPanel } from "./CasinoCaravans/CasinoCaravansPanel";
 import casinos from "../../../data/casinos.json";
 import { useGetPositionCaravans } from "../../../hooks/helpers/useCaravans";
-import { WEIGHT_PER_DONKEY_KG } from "@bibliothecadao/eternum";
+import { WEIGHT_PER_DONKEY_KG, orderNameDict } from "@bibliothecadao/eternum";
 import { ReactComponent as CloseIcon } from "../../../assets/icons/common/cross-circle.svg";
 import useUIStore from "../../../hooks/store/useUIStore";
+import { OrderIcon } from "../../../elements/OrderIcon";
 
 type FeedCasinoPopupProps = {
   onClose: () => void;
-  order: number;
+  count: number;
 };
 
-export const FeedCasinoPopup = ({ onClose, order }: FeedCasinoPopupProps) => {
+export const FeedCasinoPopup = ({ onClose, count }: FeedCasinoPopupProps) => {
   const [selectedTab, setSelectedTab] = useState(0);
   const setTooltip = useUIStore((state) => state.setTooltip);
 
   const casinoPosition = useMemo(() => {
-    const { x, z } = casinos[order - 1];
+    const { x, z } = casinos[count - 1];
     return getContractPositionFromRealPosition({ x, y: z });
-  }, [order]);
+  }, [count]);
 
   const { getCasino } = useCasino();
-  const casinoData = getCasino(order, {
-    x: casinos[order - 1].x,
-    y: casinos[order - 1].y,
-    z: casinos[order - 1].z,
+  const casinoData = getCasino(count, {
+    x: casinos[count - 1].x,
+    y: casinos[count - 1].y,
+    z: casinos[count - 1].z,
   });
 
   const { caravans } = useGetPositionCaravans(casinoPosition.x, casinoPosition.y);
@@ -75,7 +69,7 @@ export const FeedCasinoPopup = ({ onClose, order }: FeedCasinoPopupProps) => {
         ),
         component: (
           <SendResourcesToCasinoPanel
-            order={order}
+            count={count}
             onSendCaravan={() => setSelectedTab(1)}
             onClose={onClose}
             casinoData={casinoData}
@@ -93,7 +87,7 @@ export const FeedCasinoPopup = ({ onClose, order }: FeedCasinoPopupProps) => {
                 content: (
                   <>
                     <p className="whitespace-nowrap">Watch incoming caravans.</p>
-                    <p className="whitespace-nowrap">Pass resources to Casino on arriving.</p>
+                    <p className="whitespace-nowrap">Gamble resources when your caravan arrives.</p>
                   </>
                 ),
               })
@@ -101,14 +95,10 @@ export const FeedCasinoPopup = ({ onClose, order }: FeedCasinoPopupProps) => {
             onMouseLeave={() => setTooltip(null)}
             className="flex group relative flex-col items-center"
           >
-            <div>{`Caravans at Casino (${caravans.length})`}</div>
+            <div>{`Casino (${caravans.length} Caravans)`}</div>
           </div>
         ),
-        component: casinoData ? (
-          <CasinoCaravansPanel caravans={caravans} casinoData={casinoData} />
-        ) : (
-          <></>
-        ),
+        component: casinoData ? <CasinoCaravansPanel caravans={caravans} casinoData={casinoData} /> : <></>,
       },
     ],
     [selectedTab, caravans],
@@ -118,7 +108,7 @@ export const FeedCasinoPopup = ({ onClose, order }: FeedCasinoPopupProps) => {
     <SecondaryPopup name="casino">
       <SecondaryPopup.Head>
         <div className="flex items-center space-x-1">
-          <div className="mr-0.5 bg-gray">Manage Casino:</div>
+          <div className="mr-0.5 bg-gray">View Casino:</div>
           <CloseIcon className="w-3 h-3 cursor-pointer fill-white" onClick={onClose} />
         </div>
       </SecondaryPopup.Head>
@@ -129,7 +119,7 @@ export const FeedCasinoPopup = ({ onClose, order }: FeedCasinoPopupProps) => {
           variant="default"
           className="h-full"
         >
-          <Tabs.List className="!border-t-transparent">
+          <Tabs.List className="!bcount-t-transparent">
             {tabs.map((tab, index) => (
               <Tabs.Tab key={index}>{tab.label}</Tabs.Tab>
             ))}
@@ -171,21 +161,22 @@ const SelectableRealm = ({ realm, selected = false, onClick, costs, ...props }: 
   return (
     <div
       className={clsx(
-        "flex flex-col relative items-center p-2 border rounded-md text-xxs text-gray-gold",
-        "border-gray-gold",
+        "flex flex-col relative items-center p-2 bcount rounded-md text-xxs text-gray-gold",
+        "bcount-gray-gold",
       )}
       {...props}
     >
       {realm && (
-        <div className="flex absolute items-center p-1 top-0 left-0 border border-t-0 border-l-0 rounded-br-md border-gray-gold">
+        <div className="flex absolute items-center p-1 top-0 left-0 bcount bcount-t-0 bcount-l-0 rounded-br-md bcount-gray-gold">
           {realm.order && <OrderIcon order={orderNameDict[realm.order]} size="xs" className="mr-1" />}
           {realm.name}
         </div>
+
       )}
-      <div className="text-gold ml-auto absolute right-2 top-2">24h:10m away</div>
+      <div className="text-gold ml-auto absolute right-2 top-2">distance: </div>
       <div className="flex items-center mt-6 w-full">
         <div className="flex">
-          { realm.resources &&
+          {realm.resources &&
             realm.resources.map((resource: any) => {
               return (
                 <ResourceCost
@@ -194,17 +185,12 @@ const SelectableRealm = ({ realm, selected = false, onClick, costs, ...props }: 
                   key={resource.id}
                   resourceId={resource.id}
                   amount={resource?.balance}
-                  color={resource.balance >= costById[resource.id] ? "" : "text-order-giants"}
+                  color={resource.balance >= costById[resource.id] ? "" : "text-count-giants"}
                 />
               );
             })}
         </div>
-        <Button
-          disabled={!canInitialize}
-          onClick={onClick}
-          className="h-6 text-xxs ml-auto"
-          variant="success"
-        >
+        <Button disabled={!canInitialize} onClick={onClick} className="h-6 text-xxs ml-auto" variant="success">
           Select Realm
         </Button>
       </div>
@@ -213,12 +199,12 @@ const SelectableRealm = ({ realm, selected = false, onClick, costs, ...props }: 
 };
 
 const SendResourcesToCasinoPanel = ({
-  order,
+  count,
   onClose,
   onSendCaravan,
   casinoData,
 }: {
-  order: number;
+    count: number;
   onClose: () => void;
   onSendCaravan: () => void;
   casinoData: CasinoInterface | undefined;
@@ -233,23 +219,17 @@ const SendResourcesToCasinoPanel = ({
   const {
     account: { account },
     setup: {
-      systemCalls: { casino_get_winner, send_resources_to_destination },
+      systemCalls: { send_resources_to_destination },
     },
   } = useDojo();
-
-  const closeCasinoRoundAndPickWinner = async () => {
-    setIsLoading(true);
-    await casino_get_winner({ 
-      signer: account, 
-      casino_id: casinoData?.casinoId || 0,
-    });    
-    onClose();
-  };
 
   const sendResourcesToCasino = async () => {
     setIsLoading(true);
     if (casinoData) {
-      const resourcesList = casinoData?.minimumDepositResources.flatMap((resource) => [resource.resourceId, resource.amount]);
+      const resourcesList = casinoData?.minimumDepositResources.flatMap((resource) => [
+        resource.resourceId,
+        resource.amount,
+      ]);
       if (isNewCaravan) {
         await send_resources_to_destination({
           signer: account,
@@ -284,8 +264,6 @@ const SendResourcesToCasinoPanel = ({
   const realmEntityId = useRealmStore((state) => state.realmEntityId);
   const setRealmEntityId = useRealmStore((state) => state.setRealmEntityId);
 
-  const isComplete = casinoData && casinoData?.progress >= 100;
-
   // TODO: use same precision everywhere
   const resourceWeight = useMemo(() => {
     let _resourceWeight = 0;
@@ -294,10 +272,9 @@ const SendResourcesToCasinoPanel = ({
     )) {
       _resourceWeight += amount * 1;
     }
-    
+
     return _resourceWeight;
   }, [casinoData]);
-
 
   const minDepositResourceIds = useMemo(() => {
     return casinoData?.minimumDepositResources.map((resource) => resource.resourceId) || [];
@@ -310,7 +287,6 @@ const SendResourcesToCasinoPanel = ({
     });
     return amounts;
   }, [casinoData]);
-
 
   const realms = useMemo(
     () =>
@@ -352,15 +328,10 @@ const SendResourcesToCasinoPanel = ({
       <div className="flex flex-col space-y-2 text-xs w-full mb-3">
         <div className="flex justify-between">
           <div className="flex items-center">
-            {<OrderIcon order={orderNameDict[order]} size="xs" className="mx-1" />}
-            <span className="text-white font-bold">{orders[order - 1].fullOrderName}</span>
+            <span className="text-white font-bold">Casino</span>
           </div>
           <div className="flex flex-col text-xxs text-right">
-            <span className="text-gray-gold italic">State</span>
-            <span
-              className={clsx("text-gold")}
-            > GAMBLE YOUR LIFE AWAY 
-            </span>
+            <span className={clsx("text-gold")}> Get Lucky</span>
           </div>
         </div>
         <ProgressBar rounded progress={casinoData?.progress || 0} className="bg-gold" />
@@ -371,32 +342,26 @@ const SendResourcesToCasinoPanel = ({
             <div className="relative w-full">
               <img src={`/images/buildings/casino.webp`} className="object-cover w-full h-full rounded-[10px]" />
               <div className="flex flex-col p-2 absolute left-2 bottom-2 rounded-[10px] bg-black/60">
-                <div className="mb-1 ml-1 italic text-light-pink text-xxs">
-                  "Minimum Deposit:" 
-                </div>
+                <div className="mb-1 ml-1 italic text-light-pink text-xxs">"Deposit Amount:"</div>
                 <div className="grid grid-cols-4 gap-1">
                   {casinoData?.minimumDepositResources.map(({ resourceId, amount }) => (
-                        <ResourceCost
-                          withTooltip
-                          type="vertical"
-                          key={resourceId}
-                          resourceId={resourceId}
-                          amount={amount}
-                        />
-                      ))
-                    }
-                    
+                    <ResourceCost
+                      withTooltip
+                      type="vertical"
+                      key={resourceId}
+                      resourceId={resourceId}
+                      amount={amount}
+                    />
+                  ))}
                 </div>
               </div>
             </div>
-            <Headline size="big">
-              Send caravan to Casino- Step {step}
-            </Headline>
+            <Headline size="big">Send caravan to Casino- Step {step}</Headline>
             <div className="text-xxs mb-2 italic text-gold">
-              To gamble at the Casino you need to send a caravan with minumum resources deposit to the Casino location.
+              To gamble at the Casino you need to send a caravan with the required resources deposit to the Casino
             </div>
 
-            <div className="text-xxs mb-2 italic text-white">{`Click the "Next" button to select a Realm from which you want to spend resources.`}</div>
+            <div className="text-xxs mb-2 italic text-white">{`Click the "Next Step" button to select a Realm from which you want to spend resources.`}</div>
           </div>
         </>
       )}
@@ -405,7 +370,6 @@ const SendResourcesToCasinoPanel = ({
           <Headline size="big">Select Realm - Step {step}</Headline>
           <div className="text-xxs mb-2 italic text-gold">
             Press "Set the amounts" on any Realm with required resources, to set amounts and send caravan to Casino.
-            
           </div>
           {realms.map((realm) => (
             <SelectableRealm
@@ -459,23 +423,12 @@ const SendResourcesToCasinoPanel = ({
               if (step == 3) {
                 sendResourcesToCasino();
               } else {
-                if (isComplete){
-                  closeCasinoRoundAndPickWinner()
-
-                  let winnerEntityId = getCasinoRoundWinner(
-                    casinoData?.casinoId || 0,
-                    casinoData.currentRoundId
-                  )
-                  alert(`Winner is ${winnerEntityId}`)
-
-                } else {
-                  setStep(step + 1);
-                }
+                setStep(step + 1);
               }
             }}
             variant={canGoToNextStep ? "success" : "outline"}
           >
-            {step == 3 ? "Send Caravan" : isComplete ? "Get Round Winner" : "Next Step"}
+            {step == 3 ? "Send Caravan" : "Next Step"}
           </Button>
         )}
         {isLoading && (

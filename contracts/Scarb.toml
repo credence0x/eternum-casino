@@ -7,11 +7,23 @@ version = "0.0.1"
 sierra-replace-ids = true
 
 [dependencies]
-dojo = { git = "https://github.com/dojoengine/dojo", tag="v0.3.0" }
-eternum = { git = "https://github.com/BibliothecaDAO/eternum.git" }
+dojo = { git = "https://github.com/dojoengine/dojo", tag="v0.3.0-rc8" }
+eternum = { git = "https://github.com/BibliothecaDAO/eternum.git", rev="ed12307af86521ac49751972f445ae46ebfcf0b1" }
+
+[scripts]
+katana = "katana"
+deploy = "./scripts/deploy.sh"
+time_travel = "./scripts/testing/advance_time.sh"
+torii = "torii --world 0x62440ea5b77f1a4fad6e4a88383c750b9101a7bcc5d4de046dc0ae0628b6504"
 
 [tool.dojo.env]
 rpc_url = "https://api.cartridge.gg/x/eternum/katana"
+
+## dev
+#account_address = "0x517ececd29116499f4a1b64b094da79ba08dfd54a3edaa316134c41f8160973"
+#private_key = "0x1800000000300000180000000000030000000000003006001800006600"
+
+## prod
 account_address = "0x3f0b949804d6677952974ab11a5b15b46bd0963d1d71ca573460027fc9302f5"
 private_key = "0x44a4d4b4c4ec9cf3720cdb47cad479c014e50a9b9b78f9cc23efc16c602c224"
 world_address = "0x266ab0f98e94f6149b89dd86b6a963c9793afc2691ce23e3fedc82ff50dcf54"

@@ -12,11 +12,11 @@ import { ResourceCost } from "../../../../elements/ResourceCost";
 import ProgressBar from "../../../../elements/ProgressBar";
 import { Dot } from "../../../../elements/Dot";
 import { CAPACITY_PER_DONKEY } from "@bibliothecadao/eternum";
-import { getComponentValue } from "@latticexyz/recs";
+import { Has, HasValue, getComponentValue, runQuery } from "@latticexyz/recs";
 import { useDojo } from "../../../../DojoContext";
 import Button from "../../../../elements/Button";
 import { Resource } from "../../../../types";
-import { CasinoInterface, getCasinoRoundWinner, useCasino } from "../../../../hooks/helpers/useCasino";
+import { CasinoInterface, useCasino } from "../../../../hooks/helpers/useCasino";
 import useUIStore from "../../../../hooks/store/useUIStore";
 
 type CaravanProps = {
@@ -39,11 +39,18 @@ export const CasinoCaravan = ({ caravan, casinoData, ...props }: CaravanProps) =
   const {
     account: { account },
     setup: {
-      systemCalls: { casino_gamble_and_travel_back},
-      components: { Resource, CaravanMembers, HomePosition, ForeignKey },
+      systemCalls: { casino_gamble_and_travel_back },
+      components: { Resource, CaravanMembers, HomePosition, ForeignKey, Realm, Position },
     },
   } = useDojo();
 
+  const getReturnRealmId = (x: number, y: number) => {
+    const realms = runQuery([Has(Realm), HasValue(Position, { x, y })]);
+    if (realms.size > 0) {
+      let realmId = Array.from(realms)[Array.from(realms).length - 1];
+      return realmId;
+    }
+  };
   const returnPosition = useMemo(() => {
     const caravanMembers = getComponentValue(CaravanMembers, getEntityIdFromKeys([BigInt(caravan.caravanId)]));
     if (caravanMembers && caravanMembers.count > 0) {
@@ -58,10 +65,11 @@ export const CasinoCaravan = ({ caravan, casinoData, ...props }: CaravanProps) =
     }
   }, [caravan]);
 
+
   const gambleAndReturn = async () => {
     await casino_gamble_and_travel_back({
       signer: account,
-      entity_id: caravan.caravanId,
+      entity_id: getReturnRealmId(returnPosition?.x || 0, returnPosition?.y || 0),
       caravan_id: caravan.caravanId,
       casino_id: casinoData.casinoId,
       destination_coord_x: returnPosition?.x || 0,
@@ -70,8 +78,9 @@ export const CasinoCaravan = ({ caravan, casinoData, ...props }: CaravanProps) =
   };
 
   const updateCasino = () => {
-    const newCasino = getCasino(casinoData.orderId, casinoData.uiPosition);
-    casinos[casinoData.orderId - 1] = newCasino;
+    const casinoCount = 1
+    const newCasino = getCasino(casinoCount, casinoData.uiPosition);
+    casinos[casinoCount - 1] = newCasino;
     setCasinos([...casinos]);
   };
 
@@ -155,7 +164,7 @@ export const CasinoCaravan = ({ caravan, casinoData, ...props }: CaravanProps) =
             variant={hasArrived ? "success" : "danger"}
             className="ml-auto mt-auto p-2 !h-4 text-xxs !rounded-md"
           >
-            {hasArrived ? `Stake Your Chips`  : "On the way"}
+            {hasArrived ? `Gamble` : "On the way"}
           </Button>
         )}
         {isLoading && isMine && (
