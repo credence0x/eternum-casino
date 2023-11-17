@@ -1,16 +1,16 @@
 #[dojo::contract]
 mod new_resource_systems {
     use eternum::alias::ID;
-    use eternum::models::resources::{Resource};
+    use eternum::models::resources::{Resource, ResourceAllowance};
 
     use eternum::models::owner::Owner;
     use eternum::models::position::Position;
     use eternum::models::quantity::{Quantity, QuantityTrait};
     use eternum::models::capacity::Capacity;
+
     use eternum::models::config::WeightConfigImpl;
 
     use casino::interface::INewResourceSystems;
-    use casino::models::ResourceAllowance;
 
     use core::integer::BoundedInt;
 
