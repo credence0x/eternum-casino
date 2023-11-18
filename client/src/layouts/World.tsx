@@ -10,10 +10,9 @@ import TopContainer from "../containers/TopContainer";
 import NavigationModule from "../modules/NavigationModule";
 import ContentContainer from "../containers/ContentContainer";
 import RealmManagementModule from "../modules/RealmManagementModule";
-import EpochCountdown from "../components/network/EpochCountdown";
 import RealmResourcesComponent from "../components/cityview/realm/RealmResourcesComponent";
 import { useFetchBlockchainData } from "../hooks/store/useBlockchainStore";
-import { useEffect } from "react";
+import { useEffect, useState } from "react";
 import clsx from "clsx";
 import { Redirect } from "wouter";
 import { useProgress } from "@react-three/drei";
@@ -28,8 +27,25 @@ import casinos from "../data/casinos.json";
 import { useHyperstructure } from "../hooks/helpers/useHyperstructure";
 import { useCasino } from "../hooks/helpers/useCasino";
 import { Tooltip } from "../elements/Tooltip";
+import useLeaderBoardStore from "../hooks/store/useLeaderBoardStore";
+import { useDojo } from "../DojoContext";
 
 export const World = () => {
+  const {
+    setup: {
+      systemCalls: { isLive },
+    },
+  } = useDojo();
+
+  const [isWorldLive, setIsWorldLive] = useState(false);
+
+  useEffect(() => {
+    const checkWorldLive = async () => {
+      setIsWorldLive(await isLive());
+    };
+    checkWorldLive();
+  }, []);
+
   const { loading: worldLoading, progress: worldProgress } = useSyncWorld();
 
   useFetchBlockchainData();
@@ -42,9 +58,17 @@ export const World = () => {
   const isLoadingScreenEnabled = useUIStore((state) => state.isLoadingScreenEnabled);
   const setIsLoadingScreenEnabled = useUIStore((state) => state.setIsLoadingScreenEnabled);
   const setHyperstructures = useUIStore((state) => state.setHyperstructures);
-  const setCasinos = useUIStore((state) => state.setCasinos);
+const setCasinos = useUIStore((state) => state.setCasinos);
   const setCasinoRounds = useUIStore((state) => state.setCasinoRounds);
   const setMouseCoords = useUIStore((state) => state.setMouseCoords);
+
+  const { getHyperstructureIds } = useHyperstructure();
+  const syncData = useLeaderBoardStore((state) => state.syncData);
+
+  useEffect(() => {
+    let ids = getHyperstructureIds();
+    syncData(ids);
+  }, [worldLoading]);
 
   const [playBackground, { stop }] = useSound("/sound/music/happy_realm.mp3", {
     soundEnabled: isSoundOn,
@@ -61,16 +85,16 @@ export const World = () => {
   }, [isSoundOn]);
 
   const { getHyperstructure } = useHyperstructure();
-  const { getCasino, getCasinoRounds } = useCasino();
+const { getCasino, getCasinoRounds } = useCasino();
 
   useEffect(() => {
     if (!worldLoading) {
       setHyperstructures(
         hyperStructures.map((hyperstructure, index) =>
-          
-            getHyperstructure(index + 1, { x: hyperstructure.x, y: hyperstructure.y, z: hyperstructure.z }),
+
+          getHyperstructure(index + 1, { x: hyperstructure.x, y: hyperstructure.y, z: hyperstructure.z }),
         ),
-        
+      
       );
 
       setCasinos(
@@ -132,9 +156,8 @@ export const World = () => {
       <BottomRightContainer>
         <ChatModule />
       </BottomRightContainer>
-      <EpochCountdown />
       <BlurOverlayContainer>
-        <SignUpComponent worldLoading={worldLoading} worldProgress={worldProgress} />
+        <SignUpComponent isWorldLive={isWorldLive} worldLoading={worldLoading} worldProgress={worldProgress} />
       </BlurOverlayContainer>
       <Leva hidden={import.meta.env.PROD} />
       <Tooltip />

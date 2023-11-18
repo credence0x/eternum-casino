@@ -184,7 +184,7 @@ const SelectableRealm = ({ realm, selected = false, onClick, costs, ...props }: 
                   withTooltip
                   key={resource.id}
                   resourceId={resource.id}
-                  amount={resource?.balance}
+                  amount={divideByPrecision(resource?.balance)}
                   color={resource.balance >= costById[resource.id] ? "" : "text-count-giants"}
                 />
               );
@@ -350,7 +350,7 @@ const SendResourcesToCasinoPanel = ({
                       type="vertical"
                       key={resourceId}
                       resourceId={resourceId}
-                      amount={amount}
+                      amount={divideByPrecision(amount)}
                     />
                   ))}
                 </div>

@@ -7,7 +7,6 @@ import {
   AttachCaravanProps,
   BuildLaborProps,
   CancelFungibleOrderProps,
-  ClaimFungibleOrderProps,
   CompleteHyperStructureProps,
   CreateCaravanProps,
   CreateFreeTransportUnitProps,
@@ -24,6 +23,14 @@ import {
   TravelProps,
   CasinoGamblePropos,
   CasinoGetWinnerPropos,
+  OffloadResourcesProps,
+  CreateSoldiersProps,
+  GroupAndDeploySoldiersProps,
+  UngroupAndRegroupSoldiersProps,
+  UngroupSoldiersProps,
+  AttackProps,
+  StealProps,
+  LevelUpProps,
 } from "@bibliothecadao/eternum";
 
 export type SystemCalls = ReturnType<typeof createSystemCalls>;
@@ -59,6 +66,10 @@ export function createSystemCalls({ provider, contractComponents }: SetupNetwork
     setComponentsFromEvents(contractComponents, getEvents(await provider.cancel_fungible_order(props)));
   };
 
+  const offload_chest = async (props: OffloadResourcesProps) => {
+    setComponentsFromEvents(contractComponents, getEvents(await provider.offload_chest(props)));
+  };
+
   const create_free_transport_unit = async (props: CreateFreeTransportUnitProps) => {
     setComponentsFromEvents(contractComponents, getEvents(await provider.create_free_transport_unit(props)));
   };
@@ -69,10 +80,6 @@ export function createSystemCalls({ provider, contractComponents }: SetupNetwork
 
   const attach_caravan = async (props: AttachCaravanProps) => {
     setComponentsFromEvents(contractComponents, getEvents(await provider.attach_caravan(props)));
-  };
-
-  const claim_fungible_order = async (props: ClaimFungibleOrderProps) => {
-    setComponentsFromEvents(contractComponents, getEvents(await provider.claim_fungible_order(props)));
   };
 
   const purchase_and_build_labor = async (props: PurchaseLaborProps & BuildLaborProps) => {
@@ -130,7 +137,51 @@ export function createSystemCalls({ provider, contractComponents }: SetupNetwork
     setComponentsFromEvents(contractComponents, getEvents(await provider.travel(props)));
   };
 
+  const create_soldiers = async (props: CreateSoldiersProps) => {
+    setComponentsFromEvents(contractComponents, getEvents(await provider.create_soldiers(props)));
+  };
+
+  const group_and_deploy_soldiers = async (props: GroupAndDeploySoldiersProps) => {
+    setComponentsFromEvents(contractComponents, getEvents(await provider.group_and_deploy_soldiers(props)));
+  };
+
+  const ungroup_soldiers = async (props: UngroupSoldiersProps) => {
+    setComponentsFromEvents(contractComponents, getEvents(await provider.ungroup_soldiers(props)));
+  };
+
+  const attack = async (props: AttackProps) => {
+    setComponentsFromEvents(contractComponents, getEvents(await provider.attack(props)));
+  };
+
+  const steal = async (props: StealProps) => {
+    setComponentsFromEvents(contractComponents, getEvents(await provider.steal(props)));
+  };
+
+  const ungroup_and_regroup_soldiers = async (props: UngroupAndRegroupSoldiersProps) => {
+    setComponentsFromEvents(contractComponents, getEvents(await provider.ungroup_and_regroup_soldiers(props)));
+  };
+
+  const level_up = async (props: LevelUpProps) => {
+    setComponentsFromEvents(contractComponents, getEvents(await provider.level_up(props)));
+  };
+
+  const isLive = async () => {
+    try {
+      await provider.uuid();
+      return true;
+    } catch {
+      return false;
+    }
+  };
+
   return {
+    level_up,
+    isLive,
+    create_soldiers,
+    group_and_deploy_soldiers,
+    ungroup_soldiers,
+    attack,
+    steal,
     purchase_labor,
     build_labor,
     purchase_and_build_labor,
@@ -138,8 +189,8 @@ export function createSystemCalls({ provider, contractComponents }: SetupNetwork
     mint_resources,
     create_order,
     accept_order,
-    claim_fungible_order,
     cancel_fungible_order,
+    offload_chest,
     create_free_transport_unit,
     create_caravan,
     attach_caravan,
@@ -153,6 +204,7 @@ export function createSystemCalls({ provider, contractComponents }: SetupNetwork
     initialize_hyperstructure,
     complete_hyperstructure,
     travel,
+    ungroup_and_regroup_soldiers,
     casino_gamble_and_travel_back,
     casino_get_winner,
   };

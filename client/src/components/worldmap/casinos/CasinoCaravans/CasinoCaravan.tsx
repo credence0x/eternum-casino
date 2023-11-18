@@ -40,7 +40,7 @@ export const CasinoCaravan = ({ caravan, casinoData, ...props }: CaravanProps) =
     account: { account },
     setup: {
       systemCalls: { casino_gamble_and_travel_back },
-      components: { Resource, CaravanMembers, HomePosition, ForeignKey, Realm, Position },
+      components: { Resource, CaravanMembers, EntityOwner, ForeignKey, Realm, Position },
     },
   } = useDojo();
 
@@ -57,13 +57,15 @@ export const CasinoCaravan = ({ caravan, casinoData, ...props }: CaravanProps) =
       let entity_id = getEntityIdFromKeys([BigInt(caravan.caravanId), BigInt(caravanMembers.key), BigInt(0)]);
       let foreignKey = getComponentValue(ForeignKey, entity_id);
       if (foreignKey) {
-        // @note: temp fix until we don't use entity_id as field name in foreign key
-        let homePosition = getComponentValue(HomePosition, getEntityIdFromKeys([BigInt(caravan.caravanId - 2)]));
-        // let homePosition = getComponentValue(HomePosition, getEntityIdFromKeys([BigInt(foreignKey.entity_id)]));
+        let ownerRealmEntityId = getComponentValue(EntityOwner, getEntityIdFromKeys([BigInt(caravan.caravanId - 2)]));
+        let homePosition = ownerRealmEntityId
+          ? getComponentValue(Position, getEntityIdFromKeys([BigInt(ownerRealmEntityId.entity_owner_id)]))
+          : undefined;
         return homePosition;
       }
     }
   }, [caravan]);
+
 
 
   const gambleAndReturn = async () => {
@@ -152,7 +154,7 @@ export const CasinoCaravan = ({ caravan, casinoData, ...props }: CaravanProps) =
                     className="!text-gold !w-5 mt-0.5"
                     type="vertical"
                     resourceId={resource.resourceId}
-                    amount={resource.amount}
+                    amount={divideByPrecision(resource.amount)}
                   />
                 ),
             )}

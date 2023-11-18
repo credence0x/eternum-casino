@@ -6,6 +6,7 @@ import useUIStore from "../../../hooks/store/useUIStore";
 import Button from "../../../elements/Button";
 import { ResourceCost } from "../../../elements/ResourceCost";
 import { useCasino } from "../../../hooks/helpers/useCasino";
+import { divideByPrecision } from "../../../utils/utils";
 
 type CasinoComponentProps = {};
 
@@ -115,7 +116,7 @@ export const CasinoComponent = ({ }: CasinoComponentProps) => {
                     type="horizontal"
                     key={resourceId}
                     resourceId={resourceId}
-                    amount={currentAmount}
+                    amount={divideByPrecision(currentAmount)}
                   />
                 ))}
               </div>
@@ -131,7 +132,7 @@ export const CasinoComponent = ({ }: CasinoComponentProps) => {
                     type="horizontal"
                     key={resourceId}
                     resourceId={resourceId}
-                    amount={Math.max(0, completeAmount - currentAmount)}
+                    amount={Math.max(0, divideByPrecision(completeAmount - currentAmount))}
                   />
                 ))}
               </div>

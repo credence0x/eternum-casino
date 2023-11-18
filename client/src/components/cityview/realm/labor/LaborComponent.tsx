@@ -13,6 +13,7 @@ import { useMemo } from "react";
 import { soundSelector, useUiSounds } from "../../../../hooks/useUISound";
 import { useComponentValue } from "@dojoengine/react";
 import useRealmStore from "../../../../hooks/store/useRealmStore";
+import { useRealm } from "../../../../hooks/helpers/useRealm";
 
 type LaborComponentProps = {
   resourceId: number;
@@ -60,10 +61,14 @@ export const LaborComponent = ({
 
   const { play: playHarvest } = useUiSounds(soundSelector.harvest);
 
+  const { getRealmLevel } = useRealm();
+  const level = getRealmLevel(realmEntityId)?.level || 0;
+
   const onHarvest = () => {
     playHarvest();
     optimisticHarvestLabor(
       nextBlockTimestamp || 0,
+      level,
       harvest_labor,
     )({
       signer: account,
@@ -92,6 +97,7 @@ export const LaborComponent = ({
         LABOR_CONFIG.base_labor_units,
         isFood ? LABOR_CONFIG.base_food_per_cycle : LABOR_CONFIG.base_resources_per_cycle,
         nextBlockTimestamp,
+        level,
       );
     } else {
       return 0;
@@ -114,19 +120,11 @@ export const LaborComponent = ({
             <div className="flex items-center ml-auto">
               {isFood && <Village />}
               {/* // DISCUSS: when there is no labor anymore, it means full decay of the buildings, so it should be multiplier 0 */}
-              {/* note: need to limit to 4 for now because of gas limit */}
               {resourceId == ResourcesIds["Wheat"] && (
-                <div className="px-2">{`${laborLeft > 0 && labor ? labor.multiplier : 0}/${Math.min(
-                  realm?.rivers,
-                  4,
-                )}`}</div>
+                <div className="px-2">{`${laborLeft > 0 && labor ? labor.multiplier : 0}/${realm?.rivers}`}</div>
               )}
-              {/* note: need to limit to 4 for now because of gas limit */}
               {resourceId == ResourcesIds["Fish"] && (
-                <div className="px-2">{`${laborLeft > 0 && labor ? labor.multiplier : 0}/${Math.min(
-                  realm?.harbors,
-                  4,
-                )}`}</div>
+                <div className="px-2">{`${laborLeft > 0 && labor ? labor.multiplier : 0}/${realm?.harbors}`}</div>
               )}
               {/* // TODO: show visual cue that it's disabled */}
               {!buildLoadingStates[resourceId] && (
@@ -166,6 +164,7 @@ export const LaborComponent = ({
                       isFood ? LABOR_CONFIG.base_food_per_cycle : LABOR_CONFIG.base_resources_per_cycle,
                       labor.multiplier,
                       LABOR_CONFIG.base_labor_units,
+                      level,
                     ),
                   ).toFixed(0)}`
                 : "+0"}

@@ -10,9 +10,10 @@ import RealmTradeComponent from "./RealmTradeComponent";
 import RealmLaborComponent from "./RealmLaborComponent";
 import useUIStore from "../../../hooks/store/useUIStore";
 import useRealmStore from "../../../hooks/store/useRealmStore";
-import RealmStatusComponent from "./RealmStatusComponent";
 import { useGetRealm } from "../../../hooks/helpers/useRealm";
 import { LaborAuction } from "./labor/LaborAuction";
+import RealmCombatComponent from "./RealmCombatComponent";
+import { Leveling } from "./leveling/Leveling";
 
 const RealmManagementComponent = () => {
   const { realmEntityId } = useRealmStore();
@@ -100,19 +101,34 @@ const RealmManagementComponent = () => {
         component: <RealmTradeComponent />,
       },
       {
+        key: "military",
+        label: (
+          <div
+            onMouseEnter={() =>
+              setTooltip({
+                position: "top",
+                content: (
+                  <>
+                    <p className="whitespace-nowrap">Build military troops,</p>
+                    <p className="whitespace-nowrap">Defend your Realm, raid other Realms.</p>
+                  </>
+                ),
+              })
+            }
+            onMouseLeave={() => setTooltip(null)}
+            className="flex flex-col items-center "
+            title="Military"
+          >
+            <CrossSwords className="mb-2 fill-gold" /> <div>Military</div>
+          </div>
+        ),
+        component: <RealmCombatComponent />,
+      },
+      {
         key: "civilians",
         label: (
           <div className="flex flex-col items-center blur-sm cursor-not-allowed" title="Not implemented">
             <City className="mb-2 fill-gold" /> <div>Civilians</div>
-          </div>
-        ),
-        component: <div></div>,
-      },
-      {
-        key: "military",
-        label: (
-          <div className="flex flex-col items-center blur-sm cursor-not-allowed" title="Not implemented">
-            <CrossSwords className="mb-2 fill-gold" /> <div>Military</div>
           </div>
         ),
         component: <div></div>,
@@ -127,6 +143,8 @@ const RealmManagementComponent = () => {
       _tab = "open-offers";
     } else if (["labor", "food", "mines", "farm", "fish"].includes(params?.tab as string)) {
       _tab = "labor";
+    } else if (["military", "army", "defense", "siege"].includes(params?.tab as string)) {
+      _tab = "military";
     }
     const tabIndex = tabs.findIndex((tab) => tab.key === _tab);
     if (tabIndex >= 0) {
@@ -136,8 +154,15 @@ const RealmManagementComponent = () => {
 
   return (
     <>
-      <div className="flex justify-between items-center p-2">
-        <RealmStatusComponent />
+      <div className="flex justify-between items-center p-3">
+        <div className="flex flex-row ">
+          <div className="mr-2">
+            <LaborAuction />
+          </div>
+          <div>
+            <Leveling />
+          </div>
+        </div>
         <button
           onClick={showOnMap}
           className="flex items-center hover:bg-gold/20 transition-bg duration-200 z-10 px-2 py-1 ml-auto text-xxs border rounded-md text-gold border-gold"
@@ -146,7 +171,6 @@ const RealmManagementComponent = () => {
           Show on map
         </button>
       </div>
-      <LaborAuction />
       <Tabs
         selectedIndex={selectedTab}
         onChange={(index: any) => setLocation(`/realm/${realmEntityId}/${tabs[index].key}`)}

@@ -5,9 +5,7 @@ import svgr from "vite-plugin-svgr";
 
 // https://vitejs.dev/config/
 export default defineConfig({
-  plugins: [svgr(), react({
-    include: "**/*.tsx",
-  })],
+  plugins: [svgr(), react()],
   resolve: {
     alias: {
       events: "events",

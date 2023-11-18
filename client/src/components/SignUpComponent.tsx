@@ -6,14 +6,17 @@ import useUIStore from "../hooks/store/useUIStore";
 import { useDojo } from "../DojoContext";
 import { displayAddress } from "../utils/utils";
 import ListSelect from "../elements/ListSelect";
-import { ReactComponent as Danger } from "../assets/icons/common/danger.svg";
+// import { ReactComponent as Danger } from "../assets/icons/common/danger.svg";
+import { ReactComponent as Copy } from "../assets/icons/common/copy.svg";
+import { ReactComponent as Import } from "../assets/icons/common/import.svg";
 
 type SignUpComponentProps = {
+  isWorldLive: boolean;
   worldLoading: boolean;
   worldProgress: number;
 };
 
-export const SignUpComponent = ({ worldLoading, worldProgress }: SignUpComponentProps) => {
+export const SignUpComponent = ({ isWorldLive, worldLoading, worldProgress }: SignUpComponentProps) => {
   const {
     account: { create, isDeploying, list, account, select, clear },
   } = useDojo();
@@ -21,6 +24,64 @@ export const SignUpComponent = ({ worldLoading, worldProgress }: SignUpComponent
   const [showSignupPopup, setShowSignupPopup] = useState(true);
   const setShowBlurOverlay = useUIStore((state) => state.setShowBlurOverlay);
   const toggleSound = useUIStore((state) => state.toggleSound);
+  const setTooltip = useUIStore((state) => state.setTooltip);
+
+  // import export account
+  const [importMessage, setImportMessage] = useState(null);
+  const [copyMessage, setCopyMessage] = useState(null);
+
+  let disableStart = false;
+  // let disableStart = true;
+  // if (import.meta.env.DEV) {
+  //   disableStart = false;
+  // }
+
+  const onCopy = () => {
+    const burners = localStorage.getItem("burners");
+    if (burners) {
+      const burner = JSON.parse(burners)[account.address];
+      navigator.clipboard.writeText(
+        JSON.stringify({
+          address: account.address,
+          privateKey: burner.privateKey,
+          publicKey: burner.publicKey,
+          active: burner.active,
+          deployTx: burner.deployTx,
+        }),
+      );
+      setCopyMessage("Account exported!");
+    } else {
+      setCopyMessage("No account to export");
+    }
+  };
+
+  const onImportAccount = () => {
+    navigator.clipboard.readText().then((text) => {
+      try {
+        const burner = JSON.parse(text);
+        let currentBurners = localStorage.getItem("burners") ? JSON.parse(localStorage.getItem("burners")) : {};
+
+        if (currentBurners.hasOwnProperty(burner.address)) {
+          throw new Error("Account already imported");
+        }
+
+        // Add the new burner account
+        currentBurners[burner.address] = {
+          privateKey: burner.privateKey,
+          publicKey: burner.publicKey,
+          active: burner.active,
+          deployTx: burner.deployTx,
+        };
+
+        // Save the updated burners object back to localStorage
+        localStorage.setItem("burners", JSON.stringify(currentBurners));
+        setImportMessage("Account imported successfully!");
+      } catch (e) {
+        console.error(e);
+        setImportMessage("Invalid account");
+      }
+    });
+  };
 
   const isWalletSelected = useMemo(() => account.address !== import.meta.env.VITE_KATANA_ACCOUNT_1_ADDRESS!, [account]);
 
@@ -30,6 +91,19 @@ export const SignUpComponent = ({ worldLoading, worldProgress }: SignUpComponent
       toggleSound();
     }
   }, [showSignupPopup]);
+
+  useEffect(() => {
+    if (copyMessage || importMessage) {
+      setTooltip({
+        position: "top",
+        content: (
+          <>
+            <p className="whitespace-nowrap">{copyMessage ? copyMessage : importMessage}</p>
+          </>
+        ),
+      });
+    }
+  }, [copyMessage, importMessage]); // This effect runs whenever copyMessage changes.
 
   return (
     <SecondaryPopup className="!translate-x-0 !left-auto !top-1/2 !-translate-y-1/2">
@@ -56,6 +130,42 @@ export const SignUpComponent = ({ worldLoading, worldProgress }: SignUpComponent
             >
               {"Delete all wallets"}
             </Button>
+            <Copy
+              onClick={onCopy}
+              onMouseEnter={() =>
+                setTooltip({
+                  position: "top",
+                  content: (
+                    <>
+                      <p className="whitespace-nowrap">Export Account</p>
+                    </>
+                  ),
+                })
+              }
+              onMouseLeave={() => {
+                setTooltip(null);
+                setCopyMessage(null);
+              }}
+              className="cursor-pointer text-gold"
+            ></Copy>
+            <Import
+              onClick={onImportAccount}
+              onMouseEnter={() =>
+                setTooltip({
+                  position: "top",
+                  content: (
+                    <>
+                      <p className="whitespace-nowrap">Import Account</p>
+                    </>
+                  ),
+                })
+              }
+              onMouseLeave={() => {
+                setTooltip(null);
+                setImportMessage(null);
+              }}
+              className="cursor-pointer text-gold"
+            ></Import>
           </div>
           <ListSelect
             title="Active Wallet: "
@@ -67,22 +177,28 @@ export const SignUpComponent = ({ worldLoading, worldProgress }: SignUpComponent
             onChange={select}
           />
           <Button
-            // cannot use master account to sign in
-            disabled={!isWalletSelected || worldLoading}
+            // @note: currently disabled for prod, enable back when new version is ready
+            disabled={!isWalletSelected || worldLoading || disableStart || !isWorldLive}
             className="mt-2 !p-2"
             variant={worldLoading || isWalletSelected ? "primary" : "outline"}
             onClick={() => setShowSignupPopup(false)}
           >
-            {worldLoading ? "World Loading" : isWalletSelected ? "Start playing" : "No wallet selected"}
+            {!isWorldLive
+              ? "No World"
+              : worldLoading
+              ? "World Loading"
+              : isWalletSelected
+              ? "Start playing"
+              : "No wallet selected"}
           </Button>
           {/* Progress text */}
           {worldLoading && (
             <div className="mt-2 text-center text-xs text-white">Loading: {worldProgress.toFixed(2)}%</div>
           )}
-          <div className="flex items-center mt-2 mb-1 text-xs text-center text-white">
+          {/* <div className="flex items-center mt-2 mb-1 text-xs text-center text-white">
             <Danger />
-            <div className="ml-1 text-danger">Create new wallet if you played before October 14th</div>
-          </div>
+            <div className="ml-1 text-danger">Eternum in maintenance. Next update soon.</div>
+          </div> */}
           {/* <Headline size="big">Sign Up</Headline>
           <div className="flex flex-col w-full text-center text-xs text-white">
             <div className=" border border-gold my-3 w-full rounded-lg bg-black p-2 flex justify-between">

@@ -1,7 +1,7 @@
 import { useEffect, useMemo, useState } from "react";
 import { useDojo } from "../../DojoContext";
 import { Component, Has, HasValue, getComponentValue, runQuery } from "@latticexyz/recs";
-import { extractAndCleanKey, getEntityIdFromKeys, getPosition } from "../../utils/utils";
+import { divideByPrecision, extractAndCleanKey, getEntityIdFromKeys, getPosition } from "../../utils/utils";
 import useBlockchainStore from "../store/useBlockchainStore";
 import { calculateNextHarvest } from "../../components/cityview/realm/labor/laborUtils";
 import useRealmStore from "../store/useRealmStore";
@@ -10,12 +10,8 @@ import { ResourcesIds } from "@bibliothecadao/eternum";
 import { UpdatedEntity } from "../../dojo/createEntitySubscription";
 import { Position } from "../../types";
 import { getRealm } from "../../utils/realms";
-
-const LABOR_CONFIG = {
-  base_food_per_cycle: 14000,
-  base_labor_units: 7200,
-  base_resources_per_cycle: 21,
-};
+import { LABOR_CONFIG } from "@bibliothecadao/eternum";
+import { useRealm } from "../helpers/useRealm";
 
 export enum EventType {
   MakeOffer,
@@ -31,31 +27,35 @@ type realmsPosition = { realmId: number; position: Position }[];
 export type NotificationType = {
   eventType: EventType;
   keys: string[] | string;
-  data?: HarvestData | ClaimOrderData;
+  data?: HarvestData | EmptyChestData;
 };
 
 type HarvestData = {
   harvestAmount: number;
 };
 
-type ClaimOrderData = {
+type EmptyChestData = {
   destinationRealmId: number;
-  tradeId: number;
+  caravanId: number;
   realmEntityId: number;
+  resourcesChestId: number;
 };
 
 export const useNotifications = () => {
   const {
     setup: {
       entityUpdates,
-      components: { Status, Realm, Labor, ArrivalTime, Position, Trade, FungibleEntities },
+      components: { Status, Realm, Labor, ArrivalTime, Position, CaravanMembers, Inventory, ForeignKey },
     },
   } = useDojo();
 
   const nextBlockTimestamp = useBlockchainStore((state) => state.nextBlockTimestamp);
-  const { realmEntityIds } = useRealmStore();
+  const { realmEntityIds, realmEntityId } = useRealmStore();
   const realmsResources = useRealmsResource(realmEntityIds);
   const realmPositions = useRealmsPosition(realmEntityIds);
+
+  const { getRealmLevel } = useRealm();
+  const level = getRealmLevel(realmEntityId)?.level || 0;
 
   const [notifications, setNotifications] = useState<NotificationType[]>([]);
 
@@ -79,7 +79,7 @@ export const useNotifications = () => {
   useEffect(() => {
     const updateNotifications = () => {
       const notifications = nextBlockTimestamp
-        ? generateLaborNotifications(realmsResources, nextBlockTimestamp, Labor)
+        ? generateLaborNotifications(realmsResources, nextBlockTimestamp, level, Labor)
         : [];
       // add only add if not already in there
       addUniqueNotifications(notifications, setNotifications);
@@ -103,13 +103,14 @@ export const useNotifications = () => {
   useEffect(() => {
     const updateNotifications = () => {
       const notifications = nextBlockTimestamp
-        ? generateClaimableOrdersNotifications(
+        ? generateEmptyChestNotifications(
             realmPositions,
-            FungibleEntities,
+            CaravanMembers,
+            Inventory,
             Position,
             ArrivalTime,
-            Trade,
             Realm,
+            ForeignKey,
             nextBlockTimestamp,
           )
         : [];
@@ -211,6 +212,7 @@ const generateTradeNotifications = (entityUpdates: UpdatedEntity[], Status: Comp
 const generateLaborNotifications = (
   resourcesPerRealm: { realmEntityId: number; resourceIds: number[] }[],
   nextBlockTimestamp: number,
+  level: number,
   Labor: Component,
 ) => {
   const notifications: NotificationType[] = [];
@@ -229,6 +231,7 @@ const generateLaborNotifications = (
               LABOR_CONFIG.base_labor_units,
               isFood ? LABOR_CONFIG.base_food_per_cycle : LABOR_CONFIG.base_resources_per_cycle,
               nextBlockTimestamp,
+              level,
             )
           : 0;
 
@@ -237,7 +240,7 @@ const generateLaborNotifications = (
           eventType: EventType.Harvest,
           keys: [realmEntityId.toString(), resourceId.toString()],
           data: {
-            harvestAmount: harvest,
+            harvestAmount: divideByPrecision(harvest),
           },
         });
       }
@@ -257,50 +260,64 @@ const generateLaborNotifications = (
  * @param nextBlockTimestamp
  * @returns
  */
-const generateClaimableOrdersNotifications = (
+const generateEmptyChestNotifications = (
   realmPositions: realmsPosition,
-  FungibleEntities: Component,
+  CaravanMembers: Component,
+  Inventory: Component,
   Position: Component,
   ArrivalTime: Component,
-  Trade: Component,
   Realm: Component,
+  ForeignKey: Component,
   nextBlockTimestamp: number,
 ) => {
   let notifications: NotificationType[] = [];
   for (const { realmId, position: realmPosition } of realmPositions) {
-    let orderIds = runQuery([
-      Has(FungibleEntities),
-      Has(ArrivalTime),
-      HasValue(Position, { x: realmPosition.x, y: realmPosition.y }),
+    const caravansAtPositionWithInventory = runQuery([
+      Has(CaravanMembers),
+      HasValue(Inventory, {
+        items_count: 1,
+      }),
+      HasValue(Position, {
+        x: realmPosition?.x,
+        y: realmPosition?.y,
+      }),
     ]);
 
-    for (const orderId of orderIds) {
-      const makerTrade = runQuery([HasValue(Trade, { maker_order_id: orderId, claimed_by_maker: 0 })]);
-      const takerTrade = runQuery([HasValue(Trade, { taker_order_id: orderId, claimed_by_taker: 0 })]);
-      let claimed = makerTrade.size === 0 && takerTrade.size === 0;
+    const realms = runQuery([HasValue(Realm, { realm_id: realmId })]);
+    const realmEntityId = Number(realms.values().next().value);
 
-      if (!claimed) {
-        const realms = runQuery([HasValue(Realm, { realm_id: realmId })]);
-        const realmEntityId = Number(realms.values().next().value);
-        const tradeId = makerTrade.size > 0 ? makerTrade.values().next().value : takerTrade.values().next().value;
-        const arrivalTime = getComponentValue(ArrivalTime, getEntityIdFromKeys([BigInt(orderId)])) as
-          | { arrives_at: number }
-          | undefined;
+    for (const caravanId of caravansAtPositionWithInventory) {
+      const arrivalTime = getComponentValue(ArrivalTime, getEntityIdFromKeys([BigInt(caravanId)])) as
+        | { arrives_at: number }
+        | undefined;
 
-        if (arrivalTime?.arrives_at && arrivalTime.arrives_at <= nextBlockTimestamp) {
-          notifications.push({
-            eventType: EventType.OrderClaimable,
-            keys: [orderId.toString()],
-            data: {
-              destinationRealmId: realmId,
-              realmEntityId,
-              tradeId,
-            },
-          });
-        }
+      const inventory = getComponentValue(Inventory, getEntityIdFromKeys([BigInt(caravanId)])) as
+        | { items_key: number; items_count: number }
+        | undefined;
+      const foreignKey = inventory
+        ? getComponentValue(
+            ForeignKey,
+            getEntityIdFromKeys([BigInt(caravanId), BigInt(inventory.items_key), BigInt(0)]),
+          )
+        : undefined;
+
+      const resourcesChestId = foreignKey?.entity_id as number;
+
+      if (arrivalTime?.arrives_at && arrivalTime.arrives_at <= nextBlockTimestamp && resourcesChestId) {
+        notifications.push({
+          eventType: EventType.OrderClaimable,
+          keys: [caravanId.toString()],
+          data: {
+            destinationRealmId: realmId,
+            realmEntityId,
+            caravanId,
+            resourcesChestId,
+          },
+        });
       }
     }
   }
+
   return notifications;
 };
 
