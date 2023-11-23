@@ -18,6 +18,10 @@ import Button from "../../../../elements/Button";
 import { Resource } from "../../../../types";
 import { CasinoInterface, useCasino } from "../../../../hooks/helpers/useCasino";
 import useUIStore from "../../../../hooks/store/useUIStore";
+import { getRealm } from "../../../../utils/realms";
+import { orderNameDict } from "@bibliothecadao/eternum";
+
+import { OrderIcon } from "../../../../elements/OrderIcon";
 
 type CaravanProps = {
   caravan: CaravanInterface;
@@ -111,6 +115,21 @@ export const CasinoCaravan = ({ caravan, casinoData, ...props }: CaravanProps) =
     }
   }, [caravan])
 
+  const caravanOwnerRealm = useMemo(() => {
+    const caravanMembers = getComponentValue(CaravanMembers, getEntityIdFromKeys([BigInt(caravan.caravanId)]));
+    if (caravanMembers && caravanMembers.count > 0) {
+      let entity_id = getEntityIdFromKeys([BigInt(caravan.caravanId), BigInt(caravanMembers.key), BigInt(0)]);
+      let foreignKey = getComponentValue(ForeignKey, entity_id);
+      if (foreignKey) {
+        let ownerRealmEntityId = getComponentValue(EntityOwner, getEntityIdFromKeys([BigInt(caravan.caravanId - 2)]));
+
+        let entityId = getEntityIdFromKeys([BigInt(ownerRealmEntityId.entity_owner_id)]);
+        const __realm = getComponentValue(Realm, entityId);
+        return getRealm(__realm.realm_id);
+      }
+    }
+  }, [caravan])
+
   
   const deliverAndReturnToRealm = async () => {
     setIsLoading(true);
@@ -149,7 +168,18 @@ export const CasinoCaravan = ({ caravan, casinoData, ...props }: CaravanProps) =
   };
 
   const resources = useMemo(() => {
-    return Array(22)
+    
+    let food = [254, 255].map((resourceId)=>{
+      const resource = getComponentValue(Resource, getEntityIdFromKeys([BigInt(caravan.caravanId), BigInt(resourceId)]));
+        if (resource && resource.balance > 0) {
+          return {
+            resourceId,
+            amount: resource?.balance,
+          };
+        }
+    }).filter(Boolean) as Resource[];
+    
+    return food.concat(Array(22)
       .fill(0)
       .map((_, i: number) => {
         const resource = getComponentValue(Resource, getEntityIdFromKeys([BigInt(caravan.caravanId), BigInt(i + 1)]));
@@ -160,7 +190,7 @@ export const CasinoCaravan = ({ caravan, casinoData, ...props }: CaravanProps) =
           };
         }
       })
-      .filter(Boolean) as Resource[];
+      .filter(Boolean) as Resource[]);
   }, [caravan]);
 
   // capacity
@@ -174,7 +204,8 @@ export const CasinoCaravan = ({ caravan, casinoData, ...props }: CaravanProps) =
     >
       <div className="flex items-center text-xxs">
         <div className="flex items-center p-1 -mt-2 -ml-2 italic border border-t-0 border-l-0 text-light-pink rounded-br-md border-gray-gold">
-          {isMine ? "You" : displayAddress(owner || numberToHex(0))}
+          {caravanOwnerRealm.order && <OrderIcon order={orderNameDict[caravanOwnerRealm.order]} size="xs" className="mr-1" />}
+            {caravanOwnerRealm.name} 
         </div>
         <div className="flex items-center ml-1 -mt-2">
           {capacity && resourceWeight !== undefined && capacity && (

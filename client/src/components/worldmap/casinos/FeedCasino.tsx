@@ -16,7 +16,7 @@ import { Tabs } from "../../../elements/tab";
 import ProgressBar from "../../../elements/ProgressBar";
 import { CasinoCaravansPanel } from "./CasinoCaravans/CasinoCaravansPanel";
 import casinos from "../../../data/casinos.json";
-import { useGetPositionCaravans } from "../../../hooks/helpers/useCaravans";
+import { useCaravan, useGetPositionCaravans } from "../../../hooks/helpers/useCaravans";
 import { WEIGHT_PER_DONKEY_KG, orderNameDict } from "@bibliothecadao/eternum";
 import { ReactComponent as CloseIcon } from "../../../assets/icons/common/cross-circle.svg";
 import useUIStore from "../../../hooks/store/useUIStore";
@@ -164,7 +164,7 @@ export const FeedCasinoPopup = ({ onClose, count }: FeedCasinoPopupProps) => {
   );
 };
 
-const SelectableRealm = ({ realm, selected = false, onClick, costs, ...props }: any) => {
+const SelectableRealm = ({ realm, distance, selected = false, onClick, costs, ...props }: any) => {
   const costById = useMemo(() => {
     const costById: any = {};
     costs &&
@@ -202,7 +202,8 @@ const SelectableRealm = ({ realm, selected = false, onClick, costs, ...props }: 
         </div>
 
       )}
-      <div className="text-gold ml-auto absolute right-2 top-2">distance: </div>
+      <div className="text-gold ml-auto absolute right-2 top-2">distance: {distance} km
+      </div>
       <div className="flex items-center mt-6 w-full">
         <div className="flex">
           {realm.resources &&
@@ -289,6 +290,9 @@ const SendResourcesToCasinoPanel = ({
     },
   } = useDojo();
 
+  const { calculateDistance } = useCaravan();
+
+
   const realmEntityIds = useRealmStore((state) => state.realmEntityIds);
   const realmEntityId = useRealmStore((state) => state.realmEntityId);
   const setRealmEntityId = useRealmStore((state) => state.setRealmEntityId);
@@ -329,7 +333,8 @@ const SendResourcesToCasinoPanel = ({
               getEntityIdFromKeys([BigInt(realmEntityId.realmEntityId), BigInt(resource.resourceId)]),
             )?.balance || 0,
         }));
-        return { ..._realm, entity_id: realmEntityId.realmEntityId, resources: _resources };
+        const distance = calculateDistance(realmEntityId.realmEntityId, casinoData.casinoId).toFixed(1);
+        return { ..._realm, entity_id: realmEntityId.realmEntityId, resources: _resources, distance };
       }),
     [realmEntityIds],
   );
@@ -404,6 +409,7 @@ const SendResourcesToCasinoPanel = ({
             <SelectableRealm
               key={realm.realm_id}
               realm={realm}
+              distance={realm.distance}
               onClick={() => {
                 setRealmEntityId(realm.entity_id);
                 setStep(step + 1);
@@ -675,9 +681,9 @@ const SendEmptyCaravanToCasinoPanel = ({
 
         {step == 1 && (
           <div className="flex flex-col w-full space-y-2">
-            <Headline size="big">Select Round - Step {step}</Headline>
+            <Headline size="big">Winners</Headline>
             <div className="text-xxs mb-2 italic text-gold">
-              Check out the winners of previous rounds and claim your winnings.
+              Claim your winnings and check out the winners of previous rounds.
             </div>
             {rounds && rounds.map(({winnerRealm, wonResources, winnerHasCollectedWinnings, round}) => (
               <SelectableRound
