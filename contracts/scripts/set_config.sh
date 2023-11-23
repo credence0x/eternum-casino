@@ -26,7 +26,7 @@ commands+=(
     #     # Define casinos
     #     # @dev generated using data/casinos/generateCommands.js
     #     # data => ./contracts/src/scripts/casinos/casinos.json
-    "sozo execute $CASINO_CONFIG_SYSTEMS create --account-address $DOJO_ACCOUNT_ADDRESS --calldata $SOZO_WORLD,$CASINO_PLAY_SYSTEMS,1620208,1764081,4,1,10000,2,10000,3,10000,4,10000,4,1,100000,2,100000,3,100000,4,100000"
+    "sozo execute $CASINO_CONFIG_SYSTEMS create --account-address $DOJO_ACCOUNT_ADDRESS --calldata $SOZO_WORLD,$CASINO_PLAY_SYSTEMS,1620208,1764081,9,254,500000,255,500000,11,1000,9,5000,6,10000,1,100000,2,100000,3,100000,4,100000,9,254,2500000,255,2500000,11,5000,9,25000,6,50000,1,500000,2,500000,3,500000,4,500000"
 )
 
 #Ensure there is a --delay flag
