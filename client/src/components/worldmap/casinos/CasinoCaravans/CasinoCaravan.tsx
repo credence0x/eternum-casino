@@ -6,7 +6,7 @@ import { ReactComponent as CaretDownFill } from "../../../../assets/icons/common
 import { ReactComponent as DonkeyIcon } from "../../../../assets/icons/units/donkey-circle.svg";
 import useBlockchainStore from "../../../../hooks/store/useBlockchainStore";
 import { getTotalResourceWeight } from "../../../cityview/realm/trade/TradeUtils";
-import { displayAddress, divideByPrecision, getEntityIdFromKeys, numberToHex } from "../../../../utils/utils";
+import { divideByPrecision, getEntityIdFromKeys } from "../../../../utils/utils";
 import { formatSecondsInHoursMinutes } from "../../../cityview/realm/labor/laborUtils";
 import { ResourceCost } from "../../../../elements/ResourceCost";
 import ProgressBar from "../../../../elements/ProgressBar";
@@ -31,7 +31,7 @@ type CaravanProps = {
 } & React.HTMLAttributes<HTMLDivElement>;
 
 export const CasinoCaravan = ({ caravan, casinoData, ...props }: CaravanProps) => {
-  const { isMine, owner, arrivalTime, capacity } = caravan;
+  const { isMine, arrivalTime, capacity } = caravan;
   const nextBlockTimestamp = useBlockchainStore((state) => state.nextBlockTimestamp);
   const casinos = useUIStore((state) => state.casinos);
   const setCasinos = useUIStore((state) => state.setCasinos);
