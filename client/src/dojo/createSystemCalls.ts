@@ -31,6 +31,8 @@ import {
   AttackProps,
   StealProps,
   LevelUpProps,
+  CasinoPickUpWinningsPropos,
+  SendCaravanToDestinationProps,
 } from "@bibliothecadao/eternum";
 
 export type SystemCalls = ReturnType<typeof createSystemCalls>;
@@ -116,6 +118,9 @@ export function createSystemCalls({ provider, contractComponents }: SetupNetwork
   const complete_hyperstructure = async (props: CompleteHyperStructureProps) => {
     setComponentsFromEvents(contractComponents, getEvents(await provider.complete_hyperstructure(props)));
   };
+  const send_caravan_to_destination = async (props: SendCaravanToDestinationProps) => {
+    setComponentsFromEvents(contractComponents, getEvents(await provider.send_caravan_to_destination(props)));
+  };
 
   const send_resources_to_hyperstructure = async (props: SendResourcesToHyperstructureProps) => {
     setComponentsFromEvents(contractComponents, getEvents(await provider.send_resources_to_hyperstructure(props)));
@@ -131,6 +136,10 @@ export function createSystemCalls({ provider, contractComponents }: SetupNetwork
 
   const casino_get_winner = async (props: CasinoGetWinnerPropos) => {
     setComponentsFromEvents(contractComponents, getEvents(await provider.casino_get_winner(props)));
+  };
+
+  const casino_pick_up_winnings = async (props: CasinoPickUpWinningsPropos) => {
+    setComponentsFromEvents(contractComponents, getEvents(await provider.casino_pick_up_winnings(props)));
   };
 
   const travel = async (props: TravelProps) => {
@@ -199,6 +208,7 @@ export function createSystemCalls({ provider, contractComponents }: SetupNetwork
     transfer_resources,
     send_resources_to_hyperstructure,
     send_resources_to_destination,
+    send_caravan_to_destination,
     feed_hyperstructure_and_travel_back,
     initialize_hyperstructure_and_travel_back,
     initialize_hyperstructure,
@@ -207,6 +217,7 @@ export function createSystemCalls({ provider, contractComponents }: SetupNetwork
     ungroup_and_regroup_soldiers,
     casino_gamble_and_travel_back,
     casino_get_winner,
+    casino_pick_up_winnings
   };
 }
 

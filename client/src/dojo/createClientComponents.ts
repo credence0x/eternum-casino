@@ -15,7 +15,7 @@ export function createClientComponents({ contractComponents }: SetupNetworkResul
     Inventory: overridableComponent(contractComponents.Inventory),
     ResourceChest: overridableComponent(contractComponents.ResourceChest),
     DetachedResource: overridableComponent(contractComponents.DetachedResource),
-    CasinoMetaData: overridableComponent(contractComponents.CasinoMetaData), 
-    CasinoRound: overridableComponent(contractComponents.CasinoRound), 
+    CasinoMeta: overridableComponent(contractComponents.CasinoMeta), 
+    CasinoContestRound: overridableComponent(contractComponents.CasinoContestRound), 
   };
 }

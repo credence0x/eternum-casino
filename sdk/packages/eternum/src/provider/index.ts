@@ -28,7 +28,9 @@ import {
   StealProps,
   LevelUpProps,
   CasinoGamblePropos,
-  CasinoGetWinnerPropos
+  CasinoGetWinnerPropos,
+  CasinoPickUpWinningsPropos,
+  SendCaravanToDestinationProps
 } from "../types";
 import { Call } from "starknet";
 
@@ -356,6 +358,55 @@ export class EternumProvider extends RPCProvider {
       entrypoint: "transfer",
       calldata: [this.getWorldAddress(), sending_entity_id, receiving_entity_id, resources.length / 2, ...resources],
     });
+    return await this.provider.waitForTransaction(tx.transaction_hash, {
+      retryInterval: 500,
+    });
+  }
+
+  public async send_caravan_to_destination(props: SendCaravanToDestinationProps) {
+    const {
+      sending_entity_id,
+      donkeys_quantity,
+      destination_coord_x,
+      destination_coord_y,
+      signer,
+      caravan_id,
+    } = props;
+
+    let transactions: Call[] = [];
+    let final_caravan_id = caravan_id;
+
+    // If no caravan_id, create a new caravan
+    if (!caravan_id && donkeys_quantity) {
+      const transport_unit_ids = await this.uuid();
+      final_caravan_id = transport_unit_ids + UUID_OFFSET_CREATE_CARAVAN;
+
+      transactions.push(
+        {
+          contractAddress: getContractByName(this.manifest, "transport_unit_systems"),
+          entrypoint: "create_free_unit",
+          calldata: [this.getWorldAddress(), sending_entity_id, donkeys_quantity],
+        },
+        {
+          contractAddress: getContractByName(this.manifest, "caravan_systems"),
+          entrypoint: "create",
+          calldata: [this.getWorldAddress(), [transport_unit_ids].length, ...[transport_unit_ids]],
+        },
+      );
+    }
+
+    if (final_caravan_id) {
+      // Common transactions
+      transactions.push(
+        {
+          contractAddress: getContractByName(this.manifest, "travel_systems"),
+          entrypoint: "travel",
+          calldata: [this.getWorldAddress(), final_caravan_id, destination_coord_x, destination_coord_y],
+        },
+      );
+    }
+
+    const tx = await this.executeMulti(signer, transactions);
     return await this.provider.waitForTransaction(tx.transaction_hash, {
       retryInterval: 500,
     });
@@ -695,6 +746,39 @@ export class EternumProvider extends RPCProvider {
           getContractByName(this.manifest, "resource_systems"), 
           casino_id
         ],
+      },
+    ]);
+    return await this.provider.waitForTransaction(tx.transaction_hash, {
+      retryInterval: 500,
+    });
+  };
+
+  
+  public casino_pick_up_winnings = async (props: CasinoPickUpWinningsPropos) => {
+
+    let { 
+      realm_entity_id, resources, round_id, 
+      caravan_id, signer, destination_coord_x, destination_coord_y
+    } = props;
+
+
+    const tx = await this.executeMulti(signer, [
+      {
+        contractAddress: getContractByName(this.manifest, "new_resource_systems"),
+        entrypoint: "transfer_from",
+        calldata: [
+          this.getWorldAddress(), 
+          realm_entity_id, 
+          round_id, 
+          caravan_id, 
+          resources.length / 2, 
+          ...resources
+        ],
+      },
+      {
+        contractAddress: getContractByName(this.manifest, "travel_systems"),
+        entrypoint: "travel",
+        calldata: [this.getWorldAddress(), caravan_id, destination_coord_x, destination_coord_y],
       },
     ]);
     return await this.provider.waitForTransaction(tx.transaction_hash, {

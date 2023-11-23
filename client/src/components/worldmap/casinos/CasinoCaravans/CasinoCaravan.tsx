@@ -31,7 +31,9 @@ export const CasinoCaravan = ({ caravan, casinoData, ...props }: CaravanProps) =
   const nextBlockTimestamp = useBlockchainStore((state) => state.nextBlockTimestamp);
   const casinos = useUIStore((state) => state.casinos);
   const setCasinos = useUIStore((state) => state.setCasinos);
-  const { getCasino } = useCasino();
+  
+  const { getCasino, getCasinoContestRounds } = useCasino();
+
 
   const [isLoading, setIsLoading] = useState(false);
   const hasArrived = arrivalTime !== undefined && nextBlockTimestamp !== undefined && arrivalTime <= nextBlockTimestamp;
@@ -39,8 +41,8 @@ export const CasinoCaravan = ({ caravan, casinoData, ...props }: CaravanProps) =
   const {
     account: { account },
     setup: {
-      systemCalls: { casino_gamble_and_travel_back },
-      components: { Resource, CaravanMembers, EntityOwner, ForeignKey, Realm, Position },
+      systemCalls: { casino_gamble_and_travel_back, casino_pick_up_winnings },
+      components: { Resource,ResourceAllowance, CaravanMembers, EntityOwner, ForeignKey, Realm, Position},
     },
   } = useDojo();
 
@@ -68,16 +70,6 @@ export const CasinoCaravan = ({ caravan, casinoData, ...props }: CaravanProps) =
 
 
 
-  const gambleAndReturn = async () => {
-    await casino_gamble_and_travel_back({
-      signer: account,
-      entity_id: getReturnRealmId(returnPosition?.x || 0, returnPosition?.y || 0),
-      caravan_id: caravan.caravanId,
-      casino_id: casinoData.casinoId,
-      destination_coord_x: returnPosition?.x || 0,
-      destination_coord_y: returnPosition?.y || 0,
-    });
-  };
 
   const updateCasino = () => {
     const casinoCount = 1
@@ -86,10 +78,73 @@ export const CasinoCaravan = ({ caravan, casinoData, ...props }: CaravanProps) =
     setCasinos([...casinos]);
   };
 
-  const onClick = async () => {
+  const checkResourcesHaveNotAlreadyBeenClaimed = (round) => {
+    // check if the realm has collected the resources it won 
+    // by checking if the winner realm no longer has allowance
+    const __firstWonResourceAllowance 
+      = getComponentValue(
+          ResourceAllowance, getEntityIdFromKeys([
+              BigInt(round.roundId), 
+              BigInt(round.winnerId), 
+              BigInt(casinoData.casinoCurrentRoundResources[0].resourceId)
+            ])
+          );
+      
+      return __firstWonResourceAllowance.amount != 0
+  }
+
+  const caravanOwnerWonRounds = useMemo(() => {
+    const caravanMembers = getComponentValue(CaravanMembers, getEntityIdFromKeys([BigInt(caravan.caravanId)]));
+    if (caravanMembers && caravanMembers.count > 0) {
+      let entity_id = getEntityIdFromKeys([BigInt(caravan.caravanId), BigInt(caravanMembers.key), BigInt(0)]);
+      let foreignKey = getComponentValue(ForeignKey, entity_id);
+      if (foreignKey) {
+        let ownerRealmEntityId = getComponentValue(EntityOwner, getEntityIdFromKeys([BigInt(caravan.caravanId - 2)]));
+        const allCasinoContestRounds = getCasinoContestRounds();
+        let wonRounds 
+          = allCasinoContestRounds
+          .filter((round)=> round.winnerId == ownerRealmEntityId.entity_owner_id)
+          .filter(checkResourcesHaveNotAlreadyBeenClaimed);
+          
+        return wonRounds;
+      }
+    }
+  }, [caravan])
+
+  
+  const deliverAndReturnToRealm = async () => {
     setIsLoading(true);
-    await gambleAndReturn();
+    await casino_gamble_and_travel_back({
+      signer: account,
+      entity_id: getReturnRealmId(returnPosition?.x || 0, returnPosition?.y || 0),
+      caravan_id: caravan.caravanId,
+      casino_id: casinoData.casinoId,
+      destination_coord_x: returnPosition?.x || 0,
+      destination_coord_y: returnPosition?.y || 0,
+    });
     updateCasino();
+    setIsLoading(false);
+  };
+
+
+  const pickUpAndReturnToRealm = async (roundId: number, roundWinnerId: number) => {
+    setIsLoading(true);
+
+    const resourcesList = casinoData?.casinoCurrentRoundResources.flatMap((resource) => [
+      resource.resourceId,
+      resource.completeAmount,
+    ]);
+
+    await casino_pick_up_winnings({
+      signer: account,
+      round_id: roundId,
+      realm_entity_id: roundWinnerId,
+      resources:resourcesList,
+      caravan_id: caravan.caravanId,
+      destination_coord_x: returnPosition?.x || 0,
+      destination_coord_y: returnPosition?.y || 0,
+    });
+
     setIsLoading(false);
   };
 
@@ -159,15 +214,34 @@ export const CasinoCaravan = ({ caravan, casinoData, ...props }: CaravanProps) =
                 ),
             )}
         </div>
-        {!isLoading && isMine && (
+        {!isLoading && isMine && resources.length !== 0 && (
           <Button
-            onClick={onClick}
+            onClick={deliverAndReturnToRealm}
             disabled={!hasArrived}
-            variant={hasArrived ? "success" : "danger"}
+            variant={hasArrived ? "success" : "default"}
             className="ml-auto mt-auto p-2 !h-4 text-xxs !rounded-md"
           >
-            {hasArrived ? `Gamble` : "On the way"}
+            {`Stake Resources`}
           </Button>
+        )}
+        {!isLoading && isMine && resources.length === 0 && (
+          <>
+          
+          { caravanOwnerWonRounds 
+             && caravanOwnerWonRounds.map(
+                (round) => 
+                      <Button
+                      onClick={() => pickUpAndReturnToRealm(round.roundId, round.winnerId)}
+                      disabled={!hasArrived}
+                      variant={hasArrived ? "success" : "default"}
+                      className="ml-auto mt-auto p-2 !h-4 text-xxs !rounded-md"
+                    >
+                      {/* {hasArrived ? `Collect ${round.roundIndex + 1 } Winnings` : "On the way"} */}
+                      {`Travel back with round ${round.roundIndex + 1 } reward`}
+                    </Button>
+              )
+           }
+          </>
         )}
         {isLoading && isMine && (
           <Button

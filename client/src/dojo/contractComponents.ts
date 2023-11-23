@@ -635,8 +635,8 @@ export function defineContractComponents(world: World) {
         },
       );
     })(),
-    CasinoMetaData: (() => {
-      const name = "CasinoMetaData";
+    CasinoMeta: (() => {
+      const name = "CasinoMeta";
       return defineComponent(
         world,
         {
@@ -654,11 +654,12 @@ export function defineContractComponents(world: World) {
         },
       );
     })(),
-    CasinoRound: (() => {
-      const name = "CasinoRound";
+    CasinoContestRound: (() => {
+      const name = "CasinoContestRound";
       return defineComponent(
         world,
         {
+          round_id_dup: RecsType.Number,
           round_index: RecsType.Number,
           winner_id: RecsType.Number,
           participant_count: RecsType.Number,
@@ -670,13 +671,12 @@ export function defineContractComponents(world: World) {
         },
       );
     })(),
-    CasinoRoundParticipant: (() => {
-      const name = "CasinoRoundParticipant";
+    CasinoContestRoundParticipant: (() => {
+      const name = "CasinoContestRoundParticipant";
       return defineComponent(
         world,
         {
-          participant_index: RecsType.Number,
-          participant_id: RecsType.Number,
+          participant_id: RecsType.Number
         },
         {
           metadata: {
@@ -690,7 +690,6 @@ export function defineContractComponents(world: World) {
       return defineComponent(
         world,
         {
-          resource_type: RecsType.Number,
           amount: RecsType.Number,
         },
         {

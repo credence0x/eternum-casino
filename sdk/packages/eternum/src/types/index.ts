@@ -98,6 +98,23 @@ export interface CasinoGetWinnerPropos extends SystemSigner {
   casino_id: num.BigNumberish;
 }
 
+export interface CasinoPickUpWinningsPropos extends SystemSigner {
+  round_id: num.BigNumberish;
+  realm_entity_id: num.BigNumberish;
+  resources: num.BigNumberish[];
+  caravan_id: num.BigNumberish;
+  destination_coord_x: num.BigNumberish;
+  destination_coord_y: num.BigNumberish;
+}
+
+export interface SendCaravanToDestinationProps extends SystemSigner {
+  sending_entity_id: num.BigNumberish;
+  destination_coord_x: num.BigNumberish;
+  destination_coord_y: num.BigNumberish;
+  donkeys_quantity?: num.BigNumberish;
+  caravan_id?: num.BigNumberish;
+}
+
 export interface SendResourcesToHyperstructureProps extends SystemSigner {
   sending_entity_id: num.BigNumberish;
   resources: num.BigNumberish[];

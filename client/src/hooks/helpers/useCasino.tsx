@@ -22,28 +22,29 @@ export interface CasinoInterface {
   uiPosition: UIPosition;
 }
 
-export interface CasinoRoundInterface {
+export interface CasinoContestRoundInterface {
   roundIndex: number;
   winnerId: number;
   participantCount: number;
+  roundId: number;
 }
 
 export const useCasino = () => {
   const {
     setup: {
-      components: { CasinoMetaData, Resource, Position, CasinoRound },
+      components: { CasinoMeta, Resource, Position, CasinoContestRound },
     },
   } = useDojo();
 
   const getCasino = (count: number, uiPosition: UIPosition): CasinoInterface | undefined => {
     const position = getContractPositionFromRealPosition({ x: uiPosition.x, y: uiPosition.z });
-    const casinoMetaDatas = runQuery([Has(CasinoMetaData), HasValue(Position, { x: position.x, y: position.y })]);
+    const casinoMetaDatas = runQuery([Has(CasinoMeta), HasValue(Position, { x: position.x, y: position.y })]);
     if (casinoMetaDatas.size > 0) {
       let casinoId = Array.from(casinoMetaDatas)[
         Array.from(casinoMetaDatas).length - 1
       ];
 
-      let casino = getComponentValue(CasinoMetaData, casinoId);
+      let casino = getComponentValue(CasinoMeta, casinoId);
 
       if (casino) {
         let casinoCurrentRoundResources: { resourceId: number; currentAmount: number; completeAmount: number }[] = [];
@@ -89,15 +90,15 @@ export const useCasino = () => {
 
 
 
-  const getCasinoRounds = (): Array<CasinoRoundInterface | undefined> | undefined => {
-    const casinoRounds = runQuery([Has(CasinoRound)]);
+  const getCasinoContestRounds = (): Array<CasinoContestRoundInterface | undefined> | undefined => {
+    const casinoRounds = runQuery([Has(CasinoContestRound)]);
     let result = [];
     for (let i = 0; i < casinoRounds.size; i++) {
       let casinoRoundId = Array.from(casinoRounds)[i]
 
-      let casinoRound = getComponentValue(CasinoRound, casinoRoundId);
-
+      let casinoRound = getComponentValue(CasinoContestRound, casinoRoundId);
       result.push({
+        roundId: casinoRound.round_id_dup,
         roundIndex: casinoRound.round_index,
         winnerId: casinoRound.winner_id,
         participantCount: casinoRound.participant_count,
@@ -105,13 +106,12 @@ export const useCasino = () => {
     }
 
     // sort the result by round index
-    result.sort((a, b) => a?.roundIndex - b?.roundIndex);
-
+    result.sort((a, b) =>  b?.roundIndex - a?.roundIndex);
     return result;
   };
 
   return {
     getCasino,
-    getCasinoRounds,
+    getCasinoContestRounds,
   };
 };

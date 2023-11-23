@@ -2,7 +2,6 @@ import { useMemo, useState } from "react";
 import { Tabs } from "../../../elements/tab";
 import { CasinoComponent } from "./CasinoComponent";
 import useUIStore from "../../../hooks/store/useUIStore";
-import { CasinoWinnerComponent } from "./CasinoWinnerComponent";
 
 type CasinosPanelProps = {};
 
@@ -33,29 +32,7 @@ export const CasinosPanel = ({}: CasinosPanelProps) => {
           </div>
         ),
         component: <CasinoComponent />,
-      },
-      {
-        key: "my",
-        label: (
-          <div
-            onMouseEnter={() =>
-              setTooltip({
-                position: "bottom",
-                content: (
-                  <>
-                    <p className="whitespace-nowrap">View Past Winners</p>
-                  </>
-                ),
-              })
-            }
-            onMouseLeave={() => setTooltip(null)}
-            className="flex group relative flex-col items-center"
-          >
-            <div>Winners</div>
-          </div>
-        ),
-        component: <CasinoWinnerComponent />,
-      },
+      }
     ],
     [selectedTab],
   );

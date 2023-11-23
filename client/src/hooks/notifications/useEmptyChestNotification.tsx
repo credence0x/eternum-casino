@@ -48,11 +48,11 @@ export const useEmptyChestNotification = (
       <div className="flex items-center">
         <Badge size="lg" type="success" className="mr-2">
           <Checkmark className="fill-current mr-1" />
-          {`Order Claimable`}
+          {`Caravan Arrived`}
         </Badge>
 
         <div className="flex items-center">
-          by <OrderIcon size="xs" className="mx-2" order={realmOrderName} />{" "}
+          at <OrderIcon size="xs" className="mx-2" order={realmOrderName} />{" "}
           <div className="inline-block text-gold">{realmName}</div>
         </div>
       </div>
@@ -83,7 +83,7 @@ export const useEmptyChestNotification = (
           variant="success"
           size="xs"
         >
-          Claim
+          Offload
         </Button>
       </div>
     ),

@@ -60,7 +60,7 @@ export const CasinoCaravansPanel = ({ caravans, casinoData }: CaravansPanelProps
         <CaravanDetails caravan={selectedCaravan} onClose={() => setShowCaravanDetails(false)} />
       )}
       {caravans && (
-        <div className="flex flex-col p-2 space-y-2">
+        <div className="flex flex-col max-h-[530px] p-2 space-y-2">
           {caravans.map((caravan) => (
             <CasinoCaravan
               onClick={() => setSelectedCaravan(caravan)}

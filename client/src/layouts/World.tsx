@@ -59,7 +59,7 @@ export const World = () => {
   const setIsLoadingScreenEnabled = useUIStore((state) => state.setIsLoadingScreenEnabled);
   const setHyperstructures = useUIStore((state) => state.setHyperstructures);
 const setCasinos = useUIStore((state) => state.setCasinos);
-  const setCasinoRounds = useUIStore((state) => state.setCasinoRounds);
+  const setCasinoContestRounds = useUIStore((state) => state.setCasinoContestRounds);
   const setMouseCoords = useUIStore((state) => state.setMouseCoords);
 
   const { getHyperstructureIds } = useHyperstructure();
@@ -85,7 +85,7 @@ const setCasinos = useUIStore((state) => state.setCasinos);
   }, [isSoundOn]);
 
   const { getHyperstructure } = useHyperstructure();
-const { getCasino, getCasinoRounds } = useCasino();
+const { getCasino, getCasinoContestRounds } = useCasino();
 
   useEffect(() => {
     if (!worldLoading) {
@@ -103,7 +103,7 @@ const { getCasino, getCasinoRounds } = useCasino();
         )
       );
 
-      setCasinoRounds(getCasinoRounds());
+      setCasinoContestRounds(getCasinoContestRounds());
     }
   }, [worldLoading]);
 

@@ -1,4 +1,4 @@
-import { useState } from "react";
+import { useEffect, useState } from "react";
 import { useDojo } from "../../../DojoContext";
 
 import { FeedCasinoPopup } from "./FeedCasino";
@@ -12,6 +12,8 @@ type CasinoComponentProps = {};
 
 export const CasinoComponent = ({ }: CasinoComponentProps) => {
   const [showFeedPopup, setShowFeedPopup] = useState(false);
+  const [showFeedPopupNumber, setShowFeedPopupNumber] = useState(0);
+
   const [isLoading, setIsLoading] = useState(false);
   const moveCameraToTarget = useUIStore((state) => state.moveCameraToTarget);
   const { getCasino } = useCasino();
@@ -29,6 +31,12 @@ export const CasinoComponent = ({ }: CasinoComponentProps) => {
     },
   } = useDojo();
 
+  useEffect(() => {
+    if (casinos[count - 1].progress >= 100){
+      setShowFeedPopup(false);
+    }
+  },[casinos])
+
 
   const updateCasino = () => {
     const count = 1;
@@ -37,7 +45,7 @@ export const CasinoComponent = ({ }: CasinoComponentProps) => {
     setCasinos([...casinos]);
   };
 
-  const closeCasinoRoundAndPickWinner = async () => {
+  const closeCasinoContestRoundAndPickWinner = async () => {
     setIsLoading(true);
     await casino_get_winner({
       signer: account,
@@ -49,7 +57,7 @@ export const CasinoComponent = ({ }: CasinoComponentProps) => {
 
   return (
     <>
-      {count && showFeedPopup && <FeedCasinoPopup onClose={() => setShowFeedPopup(false)} count={count} />}
+      {count && showFeedPopup && showFeedPopupNumber == 2 && <FeedCasinoPopup onClose={() => setShowFeedPopup(false)} count={count} />}
       {count && casinos && (
         <div className="space-y-5 px-2 mb-4">
           <div className="text-xs text-gold"> </div>
@@ -65,22 +73,25 @@ export const CasinoComponent = ({ }: CasinoComponentProps) => {
             <div className="flex items-center">
               <div className=" text-gold flex ml-auto ">
                 {!isLoading && casinos[count - 1]?.progress < 100 ? (
-                  <Button
+                  <>
+                    <Button
                     className="p-1 !h-4 text-xxs !rounded-md"
                     variant="outline"
                     onClick={() => {
                       moveCameraToTarget(casinos[count - 1]?.uiPosition as any);
                       setShowFeedPopup(true);
+                      setShowFeedPopupNumber(2);
                     }}
-                  >
-                    GAMBLE YOUR RESOURCES 
-                  </Button>
+                    >
+                      Enter the Arena
+                    </Button>
+                    </>
                 ) : !isLoading ? (
                   <Button
                       className="p-3 !h-4 text-xxs !rounded-md"
                       variant="success"
                     onClick={() => {
-                      closeCasinoRoundAndPickWinner();
+                      closeCasinoContestRoundAndPickWinner();
                     }}
                   >
                       GET WINNER OF CURRENT ROUND
