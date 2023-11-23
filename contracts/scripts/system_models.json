@@ -1,15 +1,15 @@
 { 
     "CASINO_CONFIG_SYSTEMS": [
-        "CasinoMetaData",
-        "CasinoRound",
+        "CasinoMeta",
+        "CasinoContestRound",
         "Position",
         "Owner",
         "ResourceCost"
     ],
     "CASINO_PLAY_SYSTEMS": [
-        "CasinoMetaData",
-        "CasinoRound",
-        "CasinoRoundParticipant",
+        "CasinoMeta",
+        "CasinoContestRound",
+        "CasinoContestRoundParticipant",
         "Resource",
         "ResourceCost",
         "Owner",
@@ -17,6 +17,11 @@
     ],
     "NEW_RESOURCE_SYSTEMS": [
         "Resource",
-        "ResourceAllowance"
+        "ResourceAllowance",
+        "DetachedResource",
+        "ResourceChest",
+        "Weight",
+        "ForeignKey",
+        "Inventory"
     ]
 }

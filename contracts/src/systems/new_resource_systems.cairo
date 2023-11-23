@@ -2,21 +2,50 @@
 mod new_resource_systems {
     use eternum::alias::ID;
     use eternum::models::resources::{Resource, ResourceAllowance};
-
-    use eternum::models::owner::Owner;
-    use eternum::models::position::Position;
+    use eternum::models::owner::{Owner, EntityOwner, EntityOwnerTrait};
+    use eternum::models::inventory::Inventory;
+    use eternum::models::metadata::ForeignKey;
+    use eternum::models::position::{Position, Coord};
     use eternum::models::quantity::{Quantity, QuantityTrait};
-    use eternum::models::capacity::Capacity;
+    use eternum::models::capacity::{Capacity, CapacityTrait};
+    use eternum::models::config::{WeightConfig, WeightConfigImpl};
+    use eternum::models::resources::{ResourceChest, DetachedResource};
+    use eternum::models::movable::{ArrivalTime};
+    use eternum::models::weight::Weight;
+    use eternum::models::road::RoadImpl;
 
-    use eternum::models::config::WeightConfigImpl;
+    
+    use eternum::systems::transport::contracts::caravan_systems::caravan_systems::{
+        InternalCaravanSystemsImpl as caravan
+    };
 
-    use casino::interface::INewResourceSystems;
+    use eternum::constants::{WORLD_CONFIG_ID};
+
+    use eternum::systems::resources::interface::{IResourceSystems};
 
     use core::integer::BoundedInt;
+    use core::poseidon::poseidon_hash_span;
 
+    use debug::PrintTrait;
+
+    #[derive(Drop, starknet::Event)]
+    struct Transfer {
+        #[key]
+        receiving_entity_id: u128,
+        #[key]
+        sending_realm_id: u128,
+        sending_entity_id: u128,
+        resources: Span<(u8, u128)>
+    }
+
+    #[event]
+    #[derive(Drop, starknet::Event)]
+    enum Event {
+        Transfer: Transfer,
+    }
 
     #[external(v0)]
-    impl NewResourceSystemsImpl of INewResourceSystems<ContractState> {
+    impl ResourceSystemsImpl of IResourceSystems<ContractState> {
         
         /// Approve an entity to spend resources.
         ///
@@ -67,7 +96,7 @@ mod new_resource_systems {
         /// * `sending_entity_id` - The id of the entity sending the resources.
         /// * `receiving_entity_id` - The id of the entity receiving the resources.
         /// * `resources` - The resources to transfer.  
-        ///      
+        ///
         fn transfer(
             self: @ContractState, world: IWorldDispatcher, sending_entity_id: ID, 
             receiving_entity_id: ID, resources: Span<(u8, u128)>
@@ -82,9 +111,19 @@ mod new_resource_systems {
                     'not owner of entity id'
             );
 
+            let sending_entity_owner = get!(world, sending_entity_id, EntityOwner);
+            let sending_realm_id = sending_entity_owner.get_realm_id(world);
+
+            emit!(world, Transfer { receiving_entity_id, sending_realm_id, sending_entity_id, resources });
+
+            // check that recepient and sender are at the same position
+            caravan::check_position(world, receiving_entity_id, sending_entity_id);
+            caravan::check_arrival_time(world, receiving_entity_id);
+
             InternalResourceSystemsImpl::transfer(
                 world, sending_entity_id, receiving_entity_id, resources
             )
+
         }   
 
 
@@ -135,6 +174,9 @@ mod new_resource_systems {
                 };
             };
 
+            // check that recepient and sender are at the same position
+            caravan::check_position(world, receiving_entity_id, owner_entity_id);
+            caravan::check_arrival_time(world, receiving_entity_id);
 
             InternalResourceSystemsImpl::transfer(
                 world, owner_entity_id, receiving_entity_id, resources
@@ -146,69 +188,333 @@ mod new_resource_systems {
     impl InternalResourceSystemsImpl of InternalResourceSystemsTrait {
 
         fn transfer(
-            world: IWorldDispatcher, sending_entity_id: ID, 
-            receiving_entity_id: ID, resources: Span<(u8, u128)>
+            world: IWorldDispatcher, sender_id: ID,  receiver_id: ID, resources: Span<(u8, u128)>
         ) {
 
-            // compare positions
-            let sending_entity_position = get!(world, sending_entity_id, Position);
-            let receiving_entity_position = get!(world, receiving_entity_id, Position);
+            // create resource chest
+            let resource_chest
+                = InternalResourceChestSystemsImpl::create_and_fill(
+                    world, sender_id, resources
+                    );
 
-            assert(receiving_entity_position.x !=  0, 'entity position mismatch');
-            assert(receiving_entity_position.y != 0, 'entity position mismatch');
-
-            assert(receiving_entity_position.x == sending_entity_position.x, 'entity position mismatch');
-            assert(receiving_entity_position.y == sending_entity_position.y, 'entity position mismatch');
-        
-            // // get receiving entity's total capacity
-            let receiving_entity_capacity = get!(world, receiving_entity_id, Capacity);
-            let mut receiving_entity_total_capacity = 0;
-            if receiving_entity_capacity.weight_gram != 0 {
-                let receiving_entity_quantity = get!(world, receiving_entity_id, Quantity );
-                receiving_entity_total_capacity = receiving_entity_capacity.weight_gram * receiving_entity_quantity.get_value();
-            }
-
-
-            let mut total_weight = 0;
-            let mut resources = resources;
-            loop {
-                match resources.pop_front() {
-                    Option::Some((resource_type, resource_amount)) => {
-                        let (resource_type, resource_amount) = (*resource_type, *resource_amount);
-                        assert(resource_amount != 0, 'resource transfer amount is 0');
-
-                        let sending_entity_resource = get!(world, (sending_entity_id, resource_type) , Resource);  
-                        assert(sending_entity_resource.balance >= resource_amount, 'insufficient balance');
-
-                        let receiving_entity_resource = get!(world, (receiving_entity_id, resource_type) , Resource);
-                        set!(world, (
-                            Resource { 
-                                entity_id: sending_entity_id, 
-                                resource_type: resource_type, 
-                                balance: sending_entity_resource.balance - resource_amount
-                            },
-                            Resource { 
-                                entity_id: receiving_entity_id, 
-                                resource_type: resource_type, 
-                                balance: receiving_entity_resource.balance + resource_amount
-                            }
-                        ));
-                        
-                        total_weight += WeightConfigImpl::get_weight(
-                            world, resource_type, resource_amount
-                        );
-                    },
-                    Option::None(_) => {break;}
-                };
-            };
-
-            // ensure receiving entity has adequate capacity
-            if receiving_entity_total_capacity != 0 {
-                assert(
-                    receiving_entity_total_capacity >= total_weight, 
-                        'capacity not enough'
-                );
-            }
+            // give resource chest to receiver
+            InternalInventorySystemsImpl::add(
+                world, 
+                receiver_id,
+                resource_chest.entity_id
+            );
+     
         }
     }
+
+
+
+
+    #[generate_trait]
+    impl InternalResourceChestSystemsImpl of InternalResourceChestTrait {
+
+        fn create( world: IWorldDispatcher, resources: Span<(u8, u128)> ) -> (ResourceChest, u128) {
+            
+            let resource_chest_id = world.uuid().into();
+
+            // create the chest
+            let mut index = 0;
+            let mut resources_weight = 0;
+            loop {
+                if index == resources.len(){
+                    break;
+                }
+                
+                let (resource_type, resource_amount) = *resources.at(index);
+
+                set!(world,(
+                    DetachedResource {
+                        entity_id: resource_chest_id,
+                        index,
+                        resource_type,
+                        resource_amount
+                    }
+                ));
+
+              
+                // update resources total weight
+                let resource_type_weight 
+                    = get!(world, (WORLD_CONFIG_ID, resource_type), WeightConfig);
+                resources_weight += resource_type_weight.weight_gram * resource_amount;
+                index += 1;
+            };
+
+            let resource_chest 
+                = ResourceChest {
+                    entity_id:resource_chest_id,
+                    locked_until: 0,
+                    resources_count: resources.len(),
+                };
+
+            set!(world,(resource_chest));
+
+            (resource_chest, resources_weight)
+        }
+
+        fn fill(world: IWorldDispatcher, entity_id: u128, donor_id: u128 ) {
+            
+            let resource_chest = get!(world, entity_id, ResourceChest);
+            let mut resource_chest_weight = get!(world, entity_id, Weight);
+            assert(resource_chest_weight.value == 0, 'chest is not empty');
+
+            // create the chest
+            let mut index = 0;
+            let mut resources_weight = 0;
+            loop {
+                if index == resource_chest.resources_count {
+                    break ();
+                }
+                let detached_resource = get!(world, (entity_id, index), DetachedResource);
+                let mut donor_resource = get!(world, (donor_id, detached_resource.resource_type), Resource);
+                assert(donor_resource.balance >= detached_resource.resource_amount, 'insufficient balance');
+                
+                // remove resources from donor's balance
+                donor_resource.balance -= detached_resource.resource_amount;
+                set!(world, (donor_resource));
+            
+                // update resources total weight
+                let resource_type_weight 
+                    = get!(world, (WORLD_CONFIG_ID, detached_resource.resource_type), WeightConfig);
+                resources_weight += resource_type_weight.weight_gram * detached_resource.resource_amount;
+                index += 1;
+            };
+
+            // update chest weight
+            resource_chest_weight.value = resources_weight;
+            set!(world,(resource_chest_weight));
+
+        }
+
+
+
+        fn create_and_fill(
+            world: IWorldDispatcher, donor_id: u128, resources: Span<(u8, u128)>
+        ) -> ResourceChest {
+
+            let resource_chest_id = world.uuid().into();
+
+            // create the chest
+            let mut index = 0;
+            let mut resources_weight = 0;
+            loop {
+                if index == resources.len(){
+                    break;
+                }
+                
+                let (resource_type, resource_amount) = *resources.at(index);
+
+                let mut donor_resource = get!(world, (donor_id, resource_type), Resource);
+                assert(donor_resource.balance >= resource_amount, 'insufficient balance');
+                
+                // remove resources from donor's balance
+                donor_resource.balance -= resource_amount;
+                set!(world, (donor_resource));
+
+                // create detached resource
+                set!(world,(
+                    DetachedResource {
+                        entity_id: resource_chest_id,
+                        index,
+                        resource_type,
+                        resource_amount
+                    }
+                ));
+              
+                // update resources total weight
+                let resource_type_weight 
+                    = get!(world, (WORLD_CONFIG_ID, resource_type), WeightConfig);
+                resources_weight += resource_type_weight.weight_gram * resource_amount;
+                index += 1;
+            };
+
+            // create resource chest
+            let resource_chest 
+                = ResourceChest {
+                    entity_id:resource_chest_id,
+                    locked_until: 0,
+                    resources_count: resources.len(),
+                };
+            set!(world,(
+                resource_chest, 
+                Weight {
+                    entity_id: resource_chest_id,
+                    value: resources_weight
+                }
+            ));
+            
+            resource_chest
+
+        }
+
+
+        fn lock_until(world: IWorldDispatcher, entity_id: u128, ts: u64) {
+
+            let mut resource_chest = get!(world, entity_id, ResourceChest);
+            
+            // update locked time
+            resource_chest.locked_until = ts;
+            set!(world, (resource_chest));
+        }
+
+
+        fn offload(world: IWorldDispatcher, entity_id: ID, receiving_entity_id: ID) {
+            let mut resource_chest = get!(world, entity_id, ResourceChest);
+            let mut resource_chest_weight = get!(world, entity_id, Weight);
+            assert(resource_chest_weight.value != 0, 'chest is empty');
+            
+            // ensure that receiver has enough weight capacity
+            let receiver_capacity = get!(world, receiving_entity_id, Capacity);
+            assert(receiver_capacity.weight_gram == 0, 'invalid recepient');
+
+            // return resources to the entity
+            let mut index = 0;
+            let mut resources: Array<(u8, u128)> = array![];
+            loop {
+                if index == resource_chest.resources_count {
+                    break ();
+                };
+
+                let resource_chest_resource 
+                    = get!(world, (resource_chest.entity_id, index), DetachedResource);
+                
+                let mut receiving_entity_resource 
+                    = get!(world, (receiving_entity_id, resource_chest_resource.resource_type), Resource);
+
+                // update entity balance
+                receiving_entity_resource.balance += resource_chest_resource.resource_amount;
+                set!(world,( receiving_entity_resource ));
+
+                resources.append((
+                    resource_chest_resource.resource_type,
+                    resource_chest_resource.resource_amount
+                ));
+
+                index += 1;
+            };
+
+            // reset resource chest
+            resource_chest.resources_count = 0;
+            resource_chest.locked_until = 0;
+            set!(world,(resource_chest));
+
+            // reset resource chest weight
+            resource_chest_weight.value = 0;
+            set!(world,(resource_chest_weight));
+
+
+            // emit transfer event 
+
+            let entity_owner = get!(world, entity_id, EntityOwner);
+            let realm_id = entity_owner.get_realm_id(world);
+
+            emit!(world, Transfer { 
+                receiving_entity_id, 
+                sending_realm_id: realm_id, 
+                sending_entity_id: entity_id,
+                resources: resources.span()
+            });
+
+
+        }
+
+    }
+
+
+
+    #[generate_trait]
+    impl InternalInventorySystemsImpl of InternalInventorySystemsTrait {
+
+        fn get_foreign_key(inventory: Inventory, index: u128) -> felt252 {
+                let foreign_key_arr 
+                    = array![
+                        inventory.entity_id.into(), 
+                        inventory.items_key.into(), 
+                        index.into()
+                    ];
+               return poseidon_hash_span(foreign_key_arr.span());
+        }
+
+        fn add(world: IWorldDispatcher, entity_id: ID, item_id: ID) {
+
+                let mut inventory = get!(world, entity_id, Inventory);
+                assert(inventory.items_key != 0, 'entity has no inventory');
+
+                let item_weight = get!(world, item_id, Weight);
+                assert(item_weight.value > 0, 'item is empty');
+
+                // ensure entity can carry the weight
+                let mut entity_weight = get!(world, entity_id, Weight);
+                entity_weight.value += item_weight.value;
+
+                let entity_capacity = get!(world, entity_id, Capacity); 
+                if entity_capacity.weight_gram != 0  {
+                    let entity_quantity = get!(world, entity_id, Quantity);
+                    let entity_quantity = entity_quantity.get_value();
+                    assert(
+                        entity_capacity.weight_gram * entity_quantity 
+                            >= entity_weight.value,
+                            'capacity is not enough'
+                    );
+                }  
+
+                set!(world, (entity_weight));
+
+                // add item to inventory
+
+                let foreign_key 
+                    = InternalInventorySystemsImpl::get_foreign_key(inventory, inventory.items_count);
+                set!(world, (
+                    ForeignKey {
+                        foreign_key: foreign_key,
+                        entity_id: item_id
+                    }
+                ));
+
+                // update entity's inventory
+                inventory.items_count += 1;
+                set!(world, (inventory));
+        }
+
+        /// Remove an item from an inventory
+        fn remove(
+            world: IWorldDispatcher, entity_id: ID, index: u128
+        ) -> u128 {
+            let mut inventory = get!(world, entity_id, Inventory);
+            assert(inventory.items_count > 0, 'inventory is empty');
+
+            let last_inventory_item_foreign_key 
+                = InternalInventorySystemsImpl::get_foreign_key(inventory, inventory.items_count);
+            let last_inventory_item = get!(world, last_inventory_item_foreign_key, ForeignKey);
+ 
+                
+            let current_inventory_item_foreign_key 
+                = InternalInventorySystemsImpl::get_foreign_key(inventory, index);
+            let mut current_inventory_item 
+                = get!(world, current_inventory_item_foreign_key, ForeignKey);
+
+            let item_id = current_inventory_item.entity_id;
+
+
+            // remove weight from entity
+            let mut entity_weight = get!(world, entity_id, Weight);
+            let mut item_weight = get!(world, item_id, Weight);
+            entity_weight.value -= item_weight.value;
+            set!(world, (entity_weight));
+
+
+            current_inventory_item.entity_id = last_inventory_item.entity_id;
+            inventory.items_count -= 1;
+
+            set!(world, (current_inventory_item));
+            set!(world, (inventory));
+
+            item_id
+        }
+    }
+    
 }

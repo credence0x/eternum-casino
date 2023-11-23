@@ -1,5 +1,5 @@
 #[derive(Model, Copy, Drop, Serde)]
-struct CasinoMetaData {
+struct CasinoMeta {
     #[key]
     entity_id: u128,
     current_round_id: u128,
@@ -15,18 +15,19 @@ struct CasinoMetaData {
 }
 
 #[derive(Model, Copy, Drop, Serde)]
-struct CasinoRound {
+struct CasinoContestRound {
     #[key]
     casino_id: u128,
     #[key]
     round_id: u128,
+    round_id_dup: u128,
     round_index: u128,
     winner_id: u128,
     participant_count: u128
 }
 
 #[derive(Model, Copy, Drop, Serde)]
-struct CasinoRoundParticipant {
+struct CasinoContestRoundParticipant {
     #[key]
     casino_id: u128,
     #[key]

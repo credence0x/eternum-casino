@@ -80,7 +80,7 @@
     "0x29",
     "0x3ab802bcce3a9ca953b0e1f31a5b29eb27a9b727c891e24300e1b5cc57387ba",
     "0x2b",
-    "0x68e0ba83d3bb1fdd3dbc8c7e07dff5dae8403720a593e4a595fb18d1ad265b",
+    "0x1b9e30bab6524a37276fd31844caf9ff0335d51a8d1a1a824fc84c4657f35b9",
     "0x4275696c74696e436f737473",
     "0x53797374656d",
     "0x9931c641b913035ae674b400b61a51476d506bbe8bba2ff8a6272790aba9e6",
@@ -110,7 +110,7 @@
     "0x6765745f6275696c74696e5f636f737473",
     "0x2f",
     "0x77697468647261775f6761735f616c6c",
-    "0x436173696e6f526f756e64",
+    "0x436173696e6f436f6e74657374526f756e64",
     "0x66756e6374696f6e5f63616c6c",
     "0x4f7574206f6620676173",
     "0x7533325f746f5f66656c74323532",
@@ -1185,7 +1185,7 @@
       ],
       [
         45,
-        "casino::models::casino_round::ContractState"
+        "casino::models::casino_contest_round::ContractState"
       ],
       [
         46,
@@ -1311,7 +1311,7 @@
       ],
       [
         25,
-        "felt252_const<81458228435719008158051940>"
+        "felt252_const<5869683955669833220410832078297869499854436>"
       ],
       [
         26,
@@ -1371,23 +1371,23 @@
       ],
       [
         40,
-        "struct_construct<casino::models::casino_round::ContractState>"
+        "struct_construct<casino::models::casino_contest_round::ContractState>"
       ],
       [
         41,
-        "snapshot_take<casino::models::casino_round::ContractState>"
+        "snapshot_take<casino::models::casino_contest_round::ContractState>"
       ],
       [
         42,
-        "drop<casino::models::casino_round::ContractState>"
+        "drop<casino::models::casino_contest_round::ContractState>"
       ],
       [
         43,
-        "store_temp<casino::models::casino_round::ContractState>"
+        "store_temp<casino::models::casino_contest_round::ContractState>"
       ],
       [
         44,
-        "function_call<user@casino::models::casino_round::packed_size>"
+        "function_call<user@casino::models::casino_contest_round::packed_size>"
       ],
       [
         45,
@@ -1399,7 +1399,7 @@
       ],
       [
         47,
-        "function_call<user@casino::models::casino_round::layout>"
+        "function_call<user@casino::models::casino_contest_round::layout>"
       ],
       [
         48,
@@ -2113,23 +2113,23 @@
     "user_func_names": [
       [
         0,
-        "casino::models::casino_round::__wrapper__name"
+        "casino::models::casino_contest_round::__wrapper__name"
       ],
       [
         1,
-        "casino::models::casino_round::__wrapper__unpacked_size"
+        "casino::models::casino_contest_round::__wrapper__unpacked_size"
       ],
       [
         2,
-        "casino::models::casino_round::__wrapper__packed_size"
+        "casino::models::casino_contest_round::__wrapper__packed_size"
       ],
       [
         3,
-        "casino::models::casino_round::__wrapper__layout"
+        "casino::models::casino_contest_round::__wrapper__layout"
       ],
       [
         4,
-        "casino::models::casino_round::__wrapper__schema"
+        "casino::models::casino_contest_round::__wrapper__schema"
       ],
       [
         5,
@@ -2137,11 +2137,11 @@
       ],
       [
         6,
-        "casino::models::casino_round::packed_size"
+        "casino::models::casino_contest_round::packed_size"
       ],
       [
         7,
-        "casino::models::casino_round::layout"
+        "casino::models::casino_contest_round::layout"
       ],
       [
         8,
@@ -2400,7 +2400,7 @@
     },
     {
       "type": "event",
-      "name": "casino::models::casino_round::Event",
+      "name": "casino::models::casino_contest_round::Event",
       "kind": "enum",
       "variants": []
     }

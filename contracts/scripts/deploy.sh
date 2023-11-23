@@ -18,7 +18,7 @@ if [[ "$1" == "prod" ]]; then
         sozo build && 
         source ./scripts/env_variables.sh prod && 
         sozo migrate --world $SOZO_WORLD --rpc-url $STARKNET_RPC_URL && 
-        ./scripts/set_config.sh --delay 3
+        ./scripts/set_config.sh --delay 3 
     )
 else 
     # set color orange
@@ -28,7 +28,7 @@ else
     (
         sozo build && 
         sozo migrate && 
-        source ./scripts/env_variables.sh && 
+        source ./scripts/env_variables.sh dev && 
         ./scripts/set_config.sh --delay 0.5
     )
 fi

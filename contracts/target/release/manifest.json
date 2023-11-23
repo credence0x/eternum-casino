@@ -3262,7 +3262,7 @@
     {
       "name": "casino_config_systems",
       "address": "0x69bcf1d0a7a64dd94bcbe42b0be2c2f8fd3aa001aee4686e021ee3c0b43b719",
-      "class_hash": "0x11aee1cda026136a9e1333af8ec31de0e37a205fa6f92a3aff99b1e2b0aa86d",
+      "class_hash": "0x6fd0d99b2739898ba35e38f70070f8875b50a1c964781e807cb66828fd66f18",
       "abi": [
         {
           "type": "impl",
@@ -3361,6 +3361,30 @@
                 }
               ],
               "state_mutability": "view"
+            },
+            {
+              "type": "function",
+              "name": "update_required_resources",
+              "inputs": [
+                {
+                  "name": "world",
+                  "type": "dojo::world::IWorldDispatcher"
+                },
+                {
+                  "name": "casino_id",
+                  "type": "core::integer::u128"
+                },
+                {
+                  "name": "min_deposit_resources",
+                  "type": "core::array::Span::<(core::integer::u8, core::integer::u128)>"
+                },
+                {
+                  "name": "min_closing_resources",
+                  "type": "core::array::Span::<(core::integer::u8, core::integer::u128)>"
+                }
+              ],
+              "outputs": [],
+              "state_mutability": "view"
             }
           ]
         },
@@ -3382,10 +3406,12 @@
           "variants": []
         }
       ],
-      "reads": [],
+      "reads": [
+        "CasinoMeta"
+      ],
       "writes": [
-        "CasinoMetaData",
-        "CasinoRound",
+        "CasinoContestRound",
+        "CasinoMeta",
         "Owner",
         "Position",
         "ResourceCost"
@@ -3395,7 +3421,7 @@
     {
       "name": "casino_play_systems",
       "address": "0x2f82bd50361996e3e622908591f19b4f1f2fef490104e5b9644cefc8e155b52",
-      "class_hash": "0x227090b5f962618fd64e79b0b4ce7bf2633aac2ec44cb64983c914647c4948f",
+      "class_hash": "0x65747f0211d33eac3962d1667e28720cdacef637f5106a89e3c5d78bc7c3a69",
       "abi": [
         {
           "type": "impl",
@@ -3508,18 +3534,18 @@
         }
       ],
       "reads": [
-        "CasinoMetaData",
-        "CasinoRound",
-        "CasinoRoundParticipant",
+        "CasinoContestRound",
+        "CasinoContestRoundParticipant",
+        "CasinoMeta",
         "Owner",
         "Position",
         "Resource",
         "ResourceCost"
       ],
       "writes": [
-        "CasinoMetaData",
-        "CasinoRound",
-        "CasinoRoundParticipant",
+        "CasinoContestRound",
+        "CasinoContestRoundParticipant",
+        "CasinoMeta",
         "Owner",
         "Position"
       ],
@@ -3528,7 +3554,7 @@
     {
       "name": "new_resource_systems",
       "address": "0x37055c1a1fab0d7ab08f993e3c75852fc7f57d9c5c085ec4b9f95cc4b21cb9c",
-      "class_hash": "0x2cefaa5f0f13f682a37833d756732896879893025d23657be44f25bad9480b2",
+      "class_hash": "0x2a026c5edf328d3f23eb43293ae8e5236cf4861e506f845ea6cd16e7fbe786e",
       "abi": [
         {
           "type": "impl",
@@ -3555,8 +3581,8 @@
         },
         {
           "type": "impl",
-          "name": "NewResourceSystemsImpl",
-          "interface_name": "casino::interface::INewResourceSystems"
+          "name": "ResourceSystemsImpl",
+          "interface_name": "eternum::systems::resources::interface::IResourceSystems"
         },
         {
           "type": "struct",
@@ -3580,7 +3606,7 @@
         },
         {
           "type": "interface",
-          "name": "casino::interface::INewResourceSystems",
+          "name": "eternum::systems::resources::interface::IResourceSystems",
           "items": [
             {
               "type": "function",
@@ -3673,25 +3699,69 @@
         },
         {
           "type": "event",
+          "name": "casino::systems::new_resource_systems::new_resource_systems::Transfer",
+          "kind": "struct",
+          "members": [
+            {
+              "name": "receiving_entity_id",
+              "type": "core::integer::u128",
+              "kind": "key"
+            },
+            {
+              "name": "sending_realm_id",
+              "type": "core::integer::u128",
+              "kind": "key"
+            },
+            {
+              "name": "sending_entity_id",
+              "type": "core::integer::u128",
+              "kind": "data"
+            },
+            {
+              "name": "resources",
+              "type": "core::array::Span::<(core::integer::u8, core::integer::u128)>",
+              "kind": "data"
+            }
+          ]
+        },
+        {
+          "type": "event",
           "name": "casino::systems::new_resource_systems::new_resource_systems::Event",
           "kind": "enum",
-          "variants": []
+          "variants": [
+            {
+              "name": "Transfer",
+              "type": "casino::systems::new_resource_systems::new_resource_systems::Transfer",
+              "kind": "nested"
+            }
+          ]
         }
       ],
       "reads": [
         "Capacity",
+        "DetachedResource",
+        "EntityOwner",
+        "ForeignKey",
+        "Inventory",
         "Owner",
-        "Position",
         "Quantity",
         "Resource",
-        "ResourceAllowance"
+        "ResourceAllowance",
+        "ResourceChest",
+        "Weight",
+        "WeightConfig"
       ],
       "writes": [
-        "Resource",
-        "ResourceAllowance"
+        "DetachedResource",
+        "ForeignKey",
+        "Inventory",
+        "ResourceAllowance",
+        "ResourceChest",
+        "Weight"
       ],
       "computed": []
     }
+    
   ],
   "models": [
     {

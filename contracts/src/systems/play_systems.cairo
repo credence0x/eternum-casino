@@ -1,6 +1,6 @@
 #[dojo::contract]
 mod casino_play_systems {
-    use casino::models::{CasinoMetaData, CasinoRound, CasinoRoundParticipant};
+    use casino::models::{CasinoMeta, CasinoContestRound, CasinoContestRoundParticipant};
 
     use casino::interface::ICasinoPlaySystems;
     use casino::utils::random::{random, make_seed_from_transaction_hash};
@@ -27,7 +27,7 @@ mod casino_play_systems {
             entity_id: ID, caravan_id: ID, casino_id: ID
         ) {
 
-            let casino = get!(world, casino_id, CasinoMetaData);
+            let casino = get!(world, casino_id, CasinoMeta);
             assert(casino.current_round_id != 0 , 'does not exist');
 
             let entity_owner = get!(world, entity_id, Owner);
@@ -49,7 +49,7 @@ mod casino_play_systems {
             assert(casino_position.y == caravan_position.y, 'position mismatch');
 
             let mut casino_round
-                = get!(world, (casino_id, casino.current_round_id), CasinoRound);
+                = get!(world, (casino_id, casino.current_round_id), CasinoContestRound);
             assert(casino_round.winner_id == 0, 'round has ended');
 
             // ensure that the entity's caravan is 
@@ -90,7 +90,7 @@ mod casino_play_systems {
 
             set!(world, (casino_round));
             set!(world, (
-                CasinoRoundParticipant {
+                CasinoContestRoundParticipant {
                     casino_id: casino_round.casino_id,
                     round_id: casino_round.round_id,
                     participant_index: casino_round.participant_count,
@@ -106,14 +106,14 @@ mod casino_play_systems {
             resource_systems_address: ContractAddress, casino_id: ID
         ) -> ID {
 
-            let mut casino = get!(world, casino_id, CasinoMetaData);
+            let mut casino = get!(world, casino_id, CasinoMeta);
             assert(casino.current_round_id != 0 , 'does not exist');
 
             // check if the current round can end
 
             let round_id = casino.current_round_id;
 
-            let mut casino_round = get!(world, (casino_id, round_id), CasinoRound);
+            let mut casino_round = get!(world, (casino_id, round_id), CasinoContestRound);
             assert(casino_round.participant_count != 0 , 'no round participant');
             assert(casino_round.winner_id == 0 , 'round has ended');
             let mut index = 0;
@@ -141,7 +141,7 @@ mod casino_play_systems {
             let winner_index = random(seed, casino_round.participant_count);
 
             let winning_participant 
-                = get!(world, (casino_id, round_id, winner_index), CasinoRoundParticipant);
+                = get!(world, (casino_id, round_id, winner_index), CasinoContestRoundParticipant);
 
             casino_round.winner_id = winning_participant.participant_id;
             set!(world, (casino_round));
@@ -191,9 +191,10 @@ mod casino_play_systems {
                     entity_id: casino.current_round_id,
                     address: starknet::get_contract_address()
                 },
-                CasinoRound {
+                CasinoContestRound {
                     casino_id: casino.entity_id,
                     round_id: casino.current_round_id,
+                    round_id_dup: casino.current_round_id,
                     round_index: casino.total_rounds_played,
                     winner_id: 0,
                     participant_count: 0

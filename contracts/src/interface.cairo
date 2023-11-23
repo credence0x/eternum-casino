@@ -17,6 +17,10 @@ trait ICasinoConfigSystems<TContractState> {
         casino_play_systems_address: ContractAddress, location: Coord, 
         min_deposit_resources: Span<(u8, u128)>, min_closing_resources: Span<(u8, u128)>
     ) -> ID;
+    fn update_required_resources(
+        self: @TContractState, world: IWorldDispatcher, 
+        casino_id: ID, min_deposit_resources: Span<(u8, u128)>, min_closing_resources: Span<(u8, u128)>
+    );
 }
 
 #[starknet::interface]
@@ -36,3 +40,4 @@ trait INewResourceSystems<TContractState> {
         receiving_entity_id: ID, resources: Span<(u8, u128)>
     );
 }
+
